@@ -4,7 +4,7 @@ dotenv.config({ path: '.env.local' });
 
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { users, tours, bookings, reviews, wishlists, adminLogs } from './schema';
+import { tours, bookings, reviews, wishlists, adminLogs } from './schema';
 import * as bcrypt from 'bcryptjs';
 import * as schema from './schema';
 
@@ -80,10 +80,19 @@ async function seed() {
     ];
 
     for (const user of demoUsers) {
+      // Insert user without password (Better Auth handles passwords in accounts table)
       await sql`
-        INSERT INTO users (id, email, first_name, last_name, name, password_hash, role, email_verified)
-        VALUES (${user.id}, ${user.email}, ${user.firstName}, ${user.lastName}, ${user.name}, ${user.passwordHash}, ${user.role}, ${user.emailVerified})
+        INSERT INTO users (id, email, first_name, last_name, name, role, email_verified)
+        VALUES (${user.id}, ${user.email}, ${user.firstName}, ${user.lastName}, ${user.name}, ${user.role}, ${user.emailVerified})
         ON CONFLICT (email) DO NOTHING
+      `;
+      
+      // Create credential account with password for Better Auth
+      await sql`
+        INSERT INTO accounts (user_id, account_id, provider_id, password)
+        VALUES (${user.id}, ${user.email}, 'credential', ${user.passwordHash})
+        ON CONFLICT (provider_id, account_id) 
+        DO UPDATE SET password = ${user.passwordHash}, updated_at = NOW()
       `;
     }
 

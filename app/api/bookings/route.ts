@@ -135,8 +135,12 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid status value' }, { status: 400 });
     }
 
-    const updateData: any = { updatedAt: new Date() };
-    if (status) updateData.status = status;
+    const updateData: {
+      updatedAt: Date;
+      status?: 'Pending' | 'Confirmed' | 'Canceled';
+      paymentIntentId?: string;
+    } = { updatedAt: new Date() };
+    if (status) updateData.status = status as 'Pending' | 'Confirmed' | 'Canceled';
     if (paymentIntentId) updateData.paymentIntentId = paymentIntentId;
 
     const updatedBooking = await db

@@ -1,4 +1,4 @@
-import { pgTable, serial, text, varchar, integer, decimal, timestamp, boolean, json, uuid, primaryKey, index, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, integer, decimal, timestamp, boolean, json, uuid, primaryKey, index, pgEnum } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enums
@@ -149,6 +149,19 @@ export const adminLogs = pgTable('admin_logs', {
 }, (table) => ({
   adminIdIdx: index('admin_logs_admin_id_idx').on(table.adminId),
   entityIdx: index('admin_logs_entity_idx').on(table.affectedEntity, table.entityId),
+}));
+
+// System Logs table (for errors, payment failures, etc.)
+export const systemLogs = pgTable('system_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  type: varchar('type', { length: 50 }).notNull(), // 'error', 'payment_failure', 'system', etc.
+  message: text('message').notNull(),
+  metadata: json('metadata').$type<Record<string, any>>(),
+  userId: uuid('user_id').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  typeIdx: index('system_logs_type_idx').on(table.type),
+  createdAtIdx: index('system_logs_created_at_idx').on(table.createdAt),
 }));
 
 // Define relations

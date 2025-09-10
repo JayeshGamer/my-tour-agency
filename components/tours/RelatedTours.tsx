@@ -20,7 +20,7 @@ interface Tour {
   difficulty: string;
   maxGroupSize: number;
   imageUrl: string | null;
-  images: any;
+  images: string[];
   featured: boolean;
   status: string;
 }

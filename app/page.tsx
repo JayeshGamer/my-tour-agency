@@ -7,8 +7,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TourCard } from "@/components/tours/TourCard";
 
+interface FeaturedTour {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  duration: number;
+  location: string;
+  maxGroupSize: number;
+  difficulty: string;
+  images: string[];
+  rating: number;
+  reviewCount: number;
+  featured: boolean;
+}
+
 export default function HomePage() {
-  const [featuredTours, setFeaturedTours] = useState([]);
+  const [featuredTours, setFeaturedTours] = useState<FeaturedTour[]>([]);
 
   // Mock data - replace with API call
   useEffect(() => {

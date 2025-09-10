@@ -24,8 +24,16 @@ import {
 import { Slider } from "../../src/components/ui/slider";
 import { Separator } from "../../src/components/ui/separator";
 
+interface FilterState {
+  searchTerm?: string;
+  priceRange?: number[];
+  duration?: string;
+  difficulty?: string;
+  location?: string;
+}
+
 interface SearchFilterProps {
-  onFilterChange: (filters: any) => void;
+  onFilterChange: (filters: FilterState) => void;
 }
 
 export default function SearchFilter({ onFilterChange }: SearchFilterProps) {
@@ -181,7 +189,16 @@ function FilterContent({
   setDifficulty,
   location,
   setLocation,
-}: any) {
+}: {
+  priceRange: number[];
+  setPriceRange: (value: number[]) => void;
+  duration: string;
+  setDuration: (value: string) => void;
+  difficulty: string;
+  setDifficulty: (value: string) => void;
+  location: string;
+  setLocation: (value: string) => void;
+}) {
   return (
     <>
       <div className="space-y-2">

@@ -7,6 +7,8 @@ import { MapPin, Clock, Users, Heart, Star, TrendingUp, Sparkles } from "lucide-
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
+
 // Tour interface that matches database schema
 interface Tour {
   id: string;
@@ -25,7 +27,7 @@ interface Tour {
   imageUrl: string | null;
   included: string[];
   notIncluded: string[];
-  itinerary: any[];
+  itinerary: Array<{day: number; title: string; description: string}>;
   featured: boolean;
   status: string;
   createdAt: Date;
@@ -34,7 +36,6 @@ interface Tour {
   isNew?: boolean;
   isPopular?: boolean;
 }
-import toast from "react-hot-toast";
 
 interface TourCardProps {
   tour: Tour;
@@ -57,6 +58,7 @@ export function TourCard({ tour }: TourCardProps) {
           : `${tour.name} removed from wishlist`
       );
     } catch (error) {
+      console.error('Wishlist error:', error);
       toast.error("Could not update wishlist. Please try again.");
     }
   };

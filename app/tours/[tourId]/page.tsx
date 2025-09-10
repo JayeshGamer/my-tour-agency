@@ -153,7 +153,7 @@ export default async function TourDetailsPage({ params }: TourDetailsPageProps) 
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg text-gray-900">Tour Highlights</h3>
                   <div className="grid grid-cols-1 gap-2">
-                    {(tour.itinerary as any[]).slice(0, 3).map((item, index) => (
+                    {(tour.itinerary as Array<{day: number; title: string; description: string}>).slice(0, 3).map((item, index) => (
                       <div key={index} className="flex items-start gap-2">
                         <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
                         <div>
@@ -182,7 +182,7 @@ export default async function TourDetailsPage({ params }: TourDetailsPageProps) 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* What's Included */}
             <div>
-              <h3 className="text-xl font-semibold mb-4">What's Included</h3>
+              <h3 className="text-xl font-semibold mb-4">What&apos;s Included</h3>
               <ul className="space-y-2">
                 {(tour.included as string[]).map((item, index) => (
                   <li key={index} className="flex items-start gap-2">
@@ -195,7 +195,7 @@ export default async function TourDetailsPage({ params }: TourDetailsPageProps) 
 
             {/* What's Not Included */}
             <div>
-              <h3 className="text-xl font-semibold mb-4">What's Not Included</h3>
+              <h3 className="text-xl font-semibold mb-4">What&apos;s Not Included</h3>
               <ul className="space-y-2">
                 {(tour.notIncluded as string[]).map((item, index) => (
                   <li key={index} className="flex items-start gap-2">
@@ -211,7 +211,7 @@ export default async function TourDetailsPage({ params }: TourDetailsPageProps) 
           <div className="mt-8">
             <h3 className="text-xl font-semibold mb-4">Full Itinerary</h3>
             <div className="space-y-4">
-              {(tour.itinerary as any[]).map((day, index) => (
+              {(tour.itinerary as Array<{day: number; title: string; description: string}>).map((day, index) => (
                 <div key={index} className="border-l-4 border-blue-500 pl-4">
                   <div className="flex items-center gap-2 mb-1">
                     <Calendar className="w-4 h-4 text-blue-500" />

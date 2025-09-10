@@ -13,7 +13,6 @@ export async function GET(request: NextRequest) {
     const location = searchParams.get('location');
     const featured = searchParams.get('featured');
 
-    let query = db.select().from(tours);
     const conditions = [];
 
     // Search filter
@@ -50,12 +49,10 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(tours.featured, true));
     }
 
-    // Apply conditions if any
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    const result = await query;
+    // Apply conditions if any and execute query
+    const result = conditions.length > 0
+      ? await db.select().from(tours).where(and(...conditions))
+      : await db.select().from(tours);
 
     return NextResponse.json(result);
   } catch (error) {
@@ -72,19 +69,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     const newTour = await db.insert(tours).values({
+      name: body.name || body.title, // Required field
       title: body.title,
       description: body.description,
+      pricePerPerson: body.pricePerPerson || body.price, // Required field  
       price: body.price,
       duration: body.duration,
       maxGroupSize: body.maxGroupSize,
       difficulty: body.difficulty,
       location: body.location,
+      category: body.category || 'Adventure', // Required field
       startDates: body.startDates,
       images: body.images,
       included: body.included,
       notIncluded: body.notIncluded,
       itinerary: body.itinerary,
       featured: body.featured || false,
+      status: 'Active', // Default status
     }).returning();
 
     return NextResponse.json(newTour[0], { status: 201 });

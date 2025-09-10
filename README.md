@@ -1,3 +1,17 @@
+# Travel Agency - Tour Booking Platform
+
+A modern tour booking platform built with Next.js, featuring user authentication, tour browsing, and a complete checkout system.
+
+## ⚠️ Payment System Notice
+
+**This application includes a Stripe checkout system that operates in TEST MODE ONLY. No real payments are processed.** 
+
+🎯 **Current Status**: All database and TypeScript errors have been resolved. The Stripe integration is properly implemented and ready for testing with valid Stripe test API keys.
+
+See [PAYMENT_DISCLAIMER.md](./PAYMENT_DISCLAIMER.md) for complete details about the payment system implementation.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

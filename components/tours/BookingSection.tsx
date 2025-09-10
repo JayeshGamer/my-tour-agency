@@ -13,8 +13,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+interface Tour {
+  id: string;
+  name: string;
+  pricePerPerson: string;
+  maxGroupSize: number;
+  startDates: string[];
+}
+
 interface BookingSectionProps {
-  tour: any;
+  tour: Tour;
 }
 
 interface BookingExtras {
@@ -40,7 +48,7 @@ export default function BookingSection({ tour }: BookingSectionProps) {
     mealPlan: false,
   });
   const [totalPrice, setTotalPrice] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false); // Removed as not used in current implementation
 
   // Calculate total price whenever dependencies change
   useEffect(() => {
@@ -105,35 +113,23 @@ export default function BookingSection({ tour }: BookingSectionProps) {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tourId: tour.id,
-          numberOfPeople,
-          totalPrice,
-          startDate: selectedDate,
-          extras,
-        }),
-      });
+    // Store booking data in localStorage and redirect to checkout
+    const cartItem = {
+      tourId: tour.id,
+      tourName: tour.name,
+      date: selectedDate,
+      numberOfPeople,
+      extras,
+      totalPrice,
+      pricePerPerson: tour.pricePerPerson,
+      timestamp: new Date().toISOString(),
+    };
 
-      if (!response.ok) {
-        throw new Error('Failed to create booking');
-      }
-
-      const booking = await response.json();
-      toast.success('Booking created successfully!');
-      router.push(`/bookings/${booking.id}`);
-    } catch (error) {
-      console.error('Booking error:', error);
-      toast.error('Failed to create booking. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    // Clear existing cart and set this as the only item
+    localStorage.setItem('tourCart', JSON.stringify([cartItem]));
+    
+    toast.success('Redirecting to checkout...');
+    router.push('/checkout');
   };
 
   const availableDates = tour.startDates as string[];
