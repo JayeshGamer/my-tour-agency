@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight, MapPin, Calendar, Users } from "lucide-react";
-import { Button } from "../src/components/ui/button";
-import { Card, CardContent } from "../src/components/ui/card";
-import TourCard from "../components/tours/TourCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { TourCard } from "@/components/tours/TourCard";
 
 export default function HomePage() {
   const [featuredTours, setFeaturedTours] = useState([]);

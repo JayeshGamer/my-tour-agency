@@ -22,6 +22,13 @@
       "when": 1757503221017,
       "tag": "0002_living_giant_man",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1757509057937,
+      "tag": "0003_marvelous_wendell_vaughn",
+      "breakpoints": true
     }
   ]
 }

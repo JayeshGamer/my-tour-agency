@@ -1,112 +1,194 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, Clock, MapPin, Users, Star, Heart } from "lucide-react";
-import { Card, CardContent, CardFooter, CardHeader } from "../../src/components/ui/card";
-import { Button } from "../../src/components/ui/button";
-import { Badge } from "../../src/components/ui/badge";
+import { MapPin, Clock, Users, Heart, Star, TrendingUp, Sparkles } from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+// Tour interface that matches database schema
+interface Tour {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  pricePerPerson: string;
+  price: string;
+  duration: number;
+  maxGroupSize: number;
+  difficulty: string;
+  location: string;
+  category: string;
+  startDates: string[];
+  images: string[];
+  imageUrl: string | null;
+  included: string[];
+  notIncluded: string[];
+  itinerary: any[];
+  featured: boolean;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  discount?: number;
+  isNew?: boolean;
+  isPopular?: boolean;
+}
+import toast from "react-hot-toast";
 
 interface TourCardProps {
-  tour: {
-    id: string;
-    title: string;
-    description: string;
-    price: number;
-    duration: number;
-    location: string;
-    maxGroupSize: number;
-    difficulty: string;
-    images: string[];
-    rating?: number;
-    reviewCount?: number;
-    featured?: boolean;
-  };
+  tour: Tour;
 }
 
-export default function TourCard({ tour }: TourCardProps) {
-  const difficultyColor = {
-    easy: "bg-green-500",
-    moderate: "bg-yellow-500",
-    difficult: "bg-red-500",
-  }[tour.difficulty.toLowerCase()] || "bg-gray-500";
+export function TourCard({ tour }: TourCardProps) {
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  const handleWishlistToggle = async () => {
+    try {
+      const newValue = !isWishlisted;
+      setIsWishlisted(newValue);
+      
+      // Here you would make an API call to save the wishlist state
+      // await fetch('/api/wishlist', { ... })
+      
+      toast.success(
+        newValue 
+          ? `${tour.name} added to wishlist` 
+          : `${tour.name} removed from wishlist`
+      );
+    } catch (error) {
+      toast.error("Could not update wishlist. Please try again.");
+    }
+  };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-      <div className="relative h-48 w-full">
-        <Image
-          src={tour.images[0] || "/placeholder-tour.svg"}
-          alt={tour.title}
-          fill
-          className="object-cover"
-        />
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group relative cursor-pointer">
+      {/* Labels/Badges */}
+      <div className="absolute top-3 left-3 z-10 space-y-2">
         {tour.featured && (
-          <Badge className="absolute top-2 left-2" variant="destructive">
+          <Badge className="bg-yellow-500 text-white hover:bg-yellow-600">
+            <Star className="h-3 w-3 mr-1" />
             Featured
           </Badge>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-        >
-          <Heart className="h-4 w-4" />
-        </Button>
-        <Badge
-          className={`absolute bottom-2 right-2 ${difficultyColor}`}
-          variant="secondary"
-        >
-          {tour.difficulty}
-        </Badge>
+        {tour.discount && (
+          <Badge className="bg-red-500 text-white hover:bg-red-600">
+            {tour.discount}% OFF
+          </Badge>
+        )}
+        {tour.isNew && (
+          <Badge className="bg-green-500 text-white hover:bg-green-600">
+            <Sparkles className="h-3 w-3 mr-1" />
+            New
+          </Badge>
+        )}
+        {tour.isPopular && (
+          <Badge className="bg-blue-500 text-white hover:bg-blue-600">
+            <TrendingUp className="h-3 w-3 mr-1" />
+            Popular
+          </Badge>
+        )}
       </div>
 
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <h3 className="font-semibold text-lg line-clamp-1">{tour.title}</h3>
-          {tour.rating && (
-            <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">{tour.rating}</span>
-              <span className="text-xs text-muted-foreground">
-                ({tour.reviewCount})
-              </span>
-            </div>
-          )}
-        </div>
-        <p className="text-sm text-muted-foreground line-clamp-2">
-          {tour.description}
-        </p>
-      </CardHeader>
+      {/* Wishlist Button */}
+      <button
+        onClick={handleWishlistToggle}
+        className="absolute top-3 right-3 z-10 p-2 bg-white/90 backdrop-blur rounded-full hover:bg-white transition-all duration-200 group/heart"
+        aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+      >
+        <Heart
+          className={`h-5 w-5 transition-all duration-200 ${
+            isWishlisted
+              ? "fill-red-500 text-red-500"
+              : "text-gray-600 group-hover/heart:text-red-500"
+          }`}
+        />
+      </button>
 
-      <CardContent className="pb-3">
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <MapPin className="h-4 w-4" />
-            <span>{tour.location}</span>
+      {/* Tour Image - Clickable to view details */}
+      <Link href={`/tours/${tour.id}`} className="block">
+        <div className="relative h-56 overflow-hidden">
+        <Image
+          src={tour.imageUrl || (tour.images && tour.images[0]) || "/api/placeholder/400/300"}
+          alt={tour.name}
+          fill
+          className="object-cover group-hover:scale-110 transition-transform duration-500"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+        />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+        </div>
+      </Link>
+
+      <CardContent className="p-5">
+        {/* Tour Name - Clickable */}
+        <Link href={`/tours/${tour.id}`} className="block">
+          <h3 className="font-bold text-lg mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+            {tour.name}
+          </h3>
+        </Link>
+
+        {/* Tour Details */}
+        <div className="space-y-2.5 mb-4">
+          <div className="flex items-center gap-2 text-gray-600">
+            <Clock className="h-4 w-4 text-gray-400" />
+            <span className="text-sm font-medium">{tour.duration} days</span>
           </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>{tour.duration} days</span>
+
+          <div className="flex items-center gap-2 text-gray-600">
+            <MapPin className="h-4 w-4 text-gray-400" />
+            <span className="text-sm font-medium">{tour.location}</span>
           </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Users className="h-4 w-4" />
-            <span>Max {tour.maxGroupSize}</span>
+
+          <div className="flex items-center gap-2 text-gray-600">
+            <Users className="h-4 w-4 text-gray-400" />
+            <span className="text-sm font-medium">Max {tour.maxGroupSize} people</span>
           </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Calendar className="h-4 w-4" />
-            <span>Multiple dates</span>
-          </div>
+        </div>
+
+        {/* Difficulty Badge */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-500">Difficulty:</span>
+          <Badge
+            variant={
+              tour.difficulty === "Easy"
+                ? "secondary"
+                : tour.difficulty === "Moderate"
+                ? "default"
+                : "destructive"
+            }
+          >
+            {tour.difficulty}
+          </Badge>
         </div>
       </CardContent>
 
-      <CardFooter className="flex justify-between items-center">
-        <div>
-          <span className="text-2xl font-bold">${tour.price}</span>
-          <span className="text-sm text-muted-foreground">/person</span>
+      <CardFooter className="p-5 pt-0 border-t">
+        <div className="flex items-center justify-between w-full">
+          {/* Price */}
+          <div className="flex flex-col">
+            {tour.discount && (
+              <span className="text-sm text-gray-500 line-through">
+                ${(parseFloat(tour.pricePerPerson || tour.price) * (1 + tour.discount / 100)).toFixed(0)}
+              </span>
+            )}
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-bold text-gray-900">
+                ${parseFloat(tour.pricePerPerson || tour.price).toLocaleString()}
+              </span>
+              <span className="text-sm text-gray-500">pp</span>
+            </div>
+          </div>
+
+          {/* View Details Button */}
+          <Link href={`/tours/${tour.id}`}>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+              size="default"
+            >
+              View Details
+            </Button>
+          </Link>
         </div>
-        <Button asChild>
-          <Link href={`/tours/${tour.id}`}>View Details</Link>
-        </Button>
       </CardFooter>
     </Card>
   );
