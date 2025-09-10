@@ -19,7 +19,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-background font-sans antialiased flex flex-col">
         <Toaster position="top-right" />
         <Header />
-        <main className="container py-8 flex-1">{children}</main>
+        <main className="flex-1 py-12">{children}</main>
         <Footer />
       </body>
     </html>
