@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { DateDisplay } from '@/components/ui/DateDisplay';
 
 interface Review {
   id: string;
@@ -319,9 +319,11 @@ export default function ReviewsSection({ tourId, reviews: initialReviews, avgRat
                               />
                             ))}
                           </div>
-                          <span className="text-sm text-gray-500">
-                            {format(new Date(review.createdAt), 'MMM dd, yyyy')}
-                          </span>
+                          <DateDisplay 
+                            date={review.createdAt} 
+                            format="long" 
+                            className="text-sm text-gray-500" 
+                          />
                         </div>
                       </div>
                     </div>

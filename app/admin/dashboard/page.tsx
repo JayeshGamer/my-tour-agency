@@ -26,6 +26,8 @@ async function getDashboardData(filters?: { country?: string; dateRange?: { from
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const endOfYear = new Date(now.getFullYear(), 11, 31);
 
   // Build conditions for filtering
   const bookingConditions = [];
@@ -107,6 +109,7 @@ async function getDashboardData(filters?: { country?: string; dateRange?: { from
     .from(reviews)
     .innerJoin(users, eq(reviews.userId, users.id))
     .innerJoin(tours, eq(reviews.tourId, tours.id))
+    .where(eq(reviews.status, 'pending'))
     .orderBy(desc(reviews.createdAt))
     .limit(10);
 
@@ -135,6 +138,78 @@ async function getDashboardData(filters?: { country?: string; dateRange?: { from
     .groupBy(bookings.userId)
     .having(sql`count(${bookings.id}) > 1`);
 
+  // Get earnings data for charts
+  // Monthly earnings for this year
+  const monthlyEarnings = await db
+    .select({
+      month: sql<number>`EXTRACT(month FROM ${bookings.bookingDate})`,
+      monthName: sql<string>`TO_CHAR(${bookings.bookingDate}, 'Mon')`,
+      earnings: sql<string>`COALESCE(SUM(${bookings.totalPrice}::numeric), 0)`,
+    })
+    .from(bookings)
+    .where(
+      and(
+        eq(bookings.status, 'Confirmed'),
+        gte(bookings.bookingDate, startOfYear),
+        lte(bookings.bookingDate, endOfYear)
+      )
+    )
+    .groupBy(sql`EXTRACT(month FROM ${bookings.bookingDate})`, sql`TO_CHAR(${bookings.bookingDate}, 'Mon')`)
+    .orderBy(sql`EXTRACT(month FROM ${bookings.bookingDate})`);
+
+  // Weekly earnings for this month
+  const weeklyEarnings = await db
+    .select({
+      week: sql<number>`EXTRACT(week FROM ${bookings.bookingDate})`,
+      weekDay: sql<string>`TO_CHAR(${bookings.bookingDate}, 'Dy')`,
+      earnings: sql<string>`COALESCE(SUM(${bookings.totalPrice}::numeric), 0)`,
+    })
+    .from(bookings)
+    .where(
+      and(
+        eq(bookings.status, 'Confirmed'),
+        gte(bookings.bookingDate, startOfMonth),
+        lte(bookings.bookingDate, endOfMonth)
+      )
+    )
+    .groupBy(sql`EXTRACT(week FROM ${bookings.bookingDate})`, sql`TO_CHAR(${bookings.bookingDate}, 'Dy')`)
+    .orderBy(sql`EXTRACT(week FROM ${bookings.bookingDate})`);
+
+  // Yearly earnings for last 4 years
+  const yearlyEarnings = await db
+    .select({
+      year: sql<number>`EXTRACT(year FROM ${bookings.bookingDate})`,
+      earnings: sql<string>`COALESCE(SUM(${bookings.totalPrice}::numeric), 0)`,
+    })
+    .from(bookings)
+    .where(
+      and(
+        eq(bookings.status, 'Confirmed'),
+        gte(bookings.bookingDate, new Date(now.getFullYear() - 3, 0, 1))
+      )
+    )
+    .groupBy(sql`EXTRACT(year FROM ${bookings.bookingDate})`)
+    .orderBy(sql`EXTRACT(year FROM ${bookings.bookingDate})`);
+
+  // Format earnings data for chart
+  const earningsData = [
+    ...monthlyEarnings.map(item => ({
+      period: item.monthName,
+      earnings: parseFloat(item.earnings),
+      timeRange: 'monthly' as const
+    })),
+    ...weeklyEarnings.map(item => ({
+      period: item.weekDay,
+      earnings: parseFloat(item.earnings),
+      timeRange: 'weekly' as const
+    })),
+    ...yearlyEarnings.map(item => ({
+      period: item.year.toString(),
+      earnings: parseFloat(item.earnings),
+      timeRange: 'yearly' as const
+    }))
+  ];
+
   return {
     totalBookings,
     totalPackages,
@@ -145,6 +220,7 @@ async function getDashboardData(filters?: { country?: string; dateRange?: { from
     recentLogs,
     newUsers: newUsersCount[0]?.count || 0,
     returningUsers: returningUsersQuery.length,
+    earningsData,
   };
 }
 
@@ -233,7 +309,7 @@ export default async function AdminDashboard({
 
       {/* Charts and Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <EarningsChart />
+        <EarningsChart earningsData={data.earningsData} />
         <RecentBookings bookings={data.recentBookings} />
       </div>
 

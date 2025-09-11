@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { DateDisplay } from '@/components/ui/DateDisplay';
 
 interface Tour {
   id: string;
@@ -48,7 +48,7 @@ export default function BookingSection({ tour }: BookingSectionProps) {
     mealPlan: false,
   });
   const [totalPrice, setTotalPrice] = useState(0);
-  // const [isLoading, setIsLoading] = useState(false); // Removed as not used in current implementation
+  const [isLoading, setIsLoading] = useState(false);
 
   // Calculate total price whenever dependencies change
   useEffect(() => {
@@ -113,23 +113,35 @@ export default function BookingSection({ tour }: BookingSectionProps) {
       return;
     }
 
-    // Store booking data in localStorage and redirect to checkout
-    const cartItem = {
-      tourId: tour.id,
-      tourName: tour.name,
-      date: selectedDate,
-      numberOfPeople,
-      extras,
-      totalPrice,
-      pricePerPerson: tour.pricePerPerson,
-      timestamp: new Date().toISOString(),
-    };
+    setIsLoading(true);
+    try {
+      // Store booking data in localStorage and redirect to checkout
+      const cartItem = {
+        tourId: tour.id,
+        tourName: tour.name,
+        date: selectedDate,
+        numberOfPeople,
+        extras,
+        totalPrice,
+        pricePerPerson: tour.pricePerPerson,
+        timestamp: new Date().toISOString(),
+      };
 
-    // Clear existing cart and set this as the only item
-    localStorage.setItem('tourCart', JSON.stringify([cartItem]));
-    
-    toast.success('Redirecting to checkout...');
-    router.push('/checkout');
+      // Clear existing cart and set this as the only item
+      localStorage.setItem('tourCart', JSON.stringify([cartItem]));
+      
+      toast.success('Redirecting to checkout...');
+      
+      // Small delay for user feedback
+      setTimeout(() => {
+        router.push('/checkout');
+      }, 500);
+    } catch (error) {
+      console.error('Error processing booking:', error);
+      toast.error('Failed to process booking. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const availableDates = tour.startDates as string[];
@@ -204,7 +216,13 @@ export default function BookingSection({ tour }: BookingSectionProps) {
                 <SelectContent>
                   {availableDates.map((date) => (
                     <SelectItem key={date} value={date}>
-                      {format(new Date(date), 'MMMM dd, yyyy')}
+                      <span suppressHydrationWarning>
+                        {new Date(date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>

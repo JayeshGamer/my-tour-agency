@@ -5,6 +5,7 @@ import { relations } from 'drizzle-orm';
 export const tourStatusEnum = pgEnum('tour_status', ['Active', 'Inactive']);
 export const bookingStatusEnum = pgEnum('booking_status', ['Pending', 'Confirmed', 'Canceled']);
 export const userRoleEnum = pgEnum('user_role', ['User', 'Admin']);
+export const reviewStatusEnum = pgEnum('review_status', ['pending', 'approved', 'rejected']);
 
 // Users table (Better Auth compatible + Requirements)
 export const users = pgTable('users', {
@@ -121,6 +122,7 @@ export const reviews = pgTable('reviews', {
   rating: integer('rating').notNull(), // 1 to 5 scale
   comment: text('comment').notNull(),
   title: varchar('title', { length: 255 }), // Optional title
+  status: reviewStatusEnum('status').default('pending').notNull(),
   bookingId: uuid('booking_id').references(() => bookings.id), // Optional booking reference
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
@@ -128,6 +130,7 @@ export const reviews = pgTable('reviews', {
   userIdIdx: index('reviews_user_id_idx').on(table.userId),
   tourIdIdx: index('reviews_tour_id_idx').on(table.tourId),
   ratingIdx: index('reviews_rating_idx').on(table.rating),
+  statusIdx: index('reviews_status_idx').on(table.status),
 }));
 
 // Wishlist table
@@ -162,6 +165,108 @@ export const systemLogs = pgTable('system_logs', {
 }, (table) => ({
   typeIdx: index('system_logs_type_idx').on(table.type),
   createdAtIdx: index('system_logs_created_at_idx').on(table.createdAt),
+}));
+
+// Notifications table for admin notifications
+export const notifications = pgTable('notifications', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  message: text('message').notNull(),
+  type: varchar('type', { length: 50 }).notNull(), // 'booking', 'payment', 'system', 'review', etc.
+  isRead: boolean('is_read').default(false).notNull(),
+  priority: varchar('priority', { length: 20 }).default('normal').notNull(), // 'low', 'normal', 'high', 'urgent'
+  adminId: uuid('admin_id').references(() => users.id), // null for system-wide notifications
+  relatedEntityType: varchar('related_entity_type', { length: 50 }), // 'booking', 'user', 'tour', etc.
+  relatedEntityId: uuid('related_entity_id'),
+  metadata: json('metadata').$type<Record<string, any>>(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  typeIdx: index('notifications_type_idx').on(table.type),
+  adminIdIdx: index('notifications_admin_id_idx').on(table.adminId),
+  isReadIdx: index('notifications_is_read_idx').on(table.isRead),
+  createdAtIdx: index('notifications_created_at_idx').on(table.createdAt),
+}));
+
+// Coupons table for discount management
+export const coupons = pgTable('coupons', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  code: varchar('code', { length: 50 }).notNull().unique(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  discountType: varchar('discount_type', { length: 20 }).notNull(), // 'percentage', 'fixed'
+  discountValue: decimal('discount_value', { precision: 10, scale: 2 }).notNull(),
+  minimumAmount: decimal('minimum_amount', { precision: 10, scale: 2 }),
+  maximumDiscount: decimal('maximum_discount', { precision: 10, scale: 2 }),
+  usageLimit: integer('usage_limit'), // null for unlimited
+  usedCount: integer('used_count').default(0).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  validFrom: timestamp('valid_from').notNull(),
+  validUntil: timestamp('valid_until').notNull(),
+  applicableToTours: json('applicable_to_tours').$type<string[]>(), // null for all tours
+  createdBy: uuid('created_by').notNull().references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  codeIdx: index('coupons_code_idx').on(table.code),
+  isActiveIdx: index('coupons_is_active_idx').on(table.isActive),
+  validFromIdx: index('coupons_valid_from_idx').on(table.validFrom),
+  validUntilIdx: index('coupons_valid_until_idx').on(table.validUntil),
+}));
+
+// Coupon usage tracking
+export const couponUsage = pgTable('coupon_usage', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  couponId: uuid('coupon_id').notNull().references(() => coupons.id),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  bookingId: uuid('booking_id').references(() => bookings.id),
+  discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }).notNull(),
+  usedAt: timestamp('used_at').defaultNow().notNull(),
+}, (table) => ({
+  couponIdIdx: index('coupon_usage_coupon_id_idx').on(table.couponId),
+  userIdIdx: index('coupon_usage_user_id_idx').on(table.userId),
+  usedAtIdx: index('coupon_usage_used_at_idx').on(table.usedAt),
+}));
+
+// Contact submissions table
+export const contactSubmissions = pgTable('contact_submissions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }),
+  subject: varchar('subject', { length: 500 }).notNull(),
+  message: text('message').notNull(),
+  inquiryType: varchar('inquiry_type', { length: 50 }).notNull(), // 'general', 'booking', 'support', 'emergency'
+  status: varchar('status', { length: 50 }).default('new').notNull(), // 'new', 'in_progress', 'resolved', 'closed'
+  priority: varchar('priority', { length: 20 }).default('normal').notNull(), // 'low', 'normal', 'high', 'urgent'
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+  respondedAt: timestamp('responded_at'),
+  resolvedAt: timestamp('resolved_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  emailIdx: index('contact_submissions_email_idx').on(table.email),
+  statusIdx: index('contact_submissions_status_idx').on(table.status),
+  inquiryTypeIdx: index('contact_submissions_inquiry_type_idx').on(table.inquiryType),
+  createdAtIdx: index('contact_submissions_created_at_idx').on(table.createdAt),
+}));
+
+// Platform settings table
+export const settings = pgTable('settings', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  key: varchar('key', { length: 100 }).notNull().unique(),
+  value: text('value'),
+  description: text('description'),
+  type: varchar('type', { length: 50 }).notNull(), // 'string', 'number', 'boolean', 'json'
+  category: varchar('category', { length: 50 }).notNull(), // 'general', 'email', 'payment', 'api', etc.
+  isPublic: boolean('is_public').default(false).notNull(), // whether setting can be accessed by frontend
+  updatedBy: uuid('updated_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => ({
+  keyIdx: index('settings_key_idx').on(table.key),
+  categoryIdx: index('settings_category_idx').on(table.category),
 }));
 
 // Define relations
@@ -218,6 +323,43 @@ export const wishlistsRelations = relations(wishlists, ({ one }) => ({
 export const adminLogsRelations = relations(adminLogs, ({ one }) => ({
   admin: one(users, {
     fields: [adminLogs.adminId],
+    references: [users.id],
+  }),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  admin: one(users, {
+    fields: [notifications.adminId],
+    references: [users.id],
+  }),
+}));
+
+export const couponsRelations = relations(coupons, ({ one, many }) => ({
+  createdBy: one(users, {
+    fields: [coupons.createdBy],
+    references: [users.id],
+  }),
+  usages: many(couponUsage),
+}));
+
+export const couponUsageRelations = relations(couponUsage, ({ one }) => ({
+  coupon: one(coupons, {
+    fields: [couponUsage.couponId],
+    references: [coupons.id],
+  }),
+  user: one(users, {
+    fields: [couponUsage.userId],
+    references: [users.id],
+  }),
+  booking: one(bookings, {
+    fields: [couponUsage.bookingId],
+    references: [bookings.id],
+  }),
+}));
+
+export const settingsRelations = relations(settings, ({ one }) => ({
+  updatedBy: one(users, {
+    fields: [settings.updatedBy],
     references: [users.id],
   }),
 }));

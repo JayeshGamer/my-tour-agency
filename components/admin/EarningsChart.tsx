@@ -16,50 +16,68 @@ import { TrendingUp } from "lucide-react";
 
 type TimeRange = "weekly" | "monthly" | "yearly";
 
-export default function EarningsChart() {
+interface EarningsChartProps {
+  earningsData?: Array<{
+    period: string;
+    earnings: number;
+    timeRange: TimeRange;
+  }>;
+}
+
+export default function EarningsChart({ earningsData }: EarningsChartProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("monthly");
   const [chartData, setChartData] = useState<any[]>([]);
 
-  // Mock data - in production, fetch from API
   useEffect(() => {
-    const generateData = () => {
-      switch (timeRange) {
-        case "weekly":
-          return [
-            { name: "Mon", earnings: 15000 },
-            { name: "Tue", earnings: 18000 },
-            { name: "Wed", earnings: 22000 },
-            { name: "Thu", earnings: 25000 },
-            { name: "Fri", earnings: 32000 },
-            { name: "Sat", earnings: 38000 },
-            { name: "Sun", earnings: 30000 },
-          ];
-        case "monthly":
-          return [
-            { name: "Jan", earnings: 120000 },
-            { name: "Feb", earnings: 150000 },
-            { name: "Mar", earnings: 180000 },
-            { name: "Apr", earnings: 220000 },
-            { name: "May", earnings: 280000 },
-            { name: "Jun", earnings: 320000 },
-            { name: "Jul", earnings: 380000 },
-            { name: "Aug", earnings: 420000 },
-            { name: "Sep", earnings: 480000 },
-          ];
-        case "yearly":
-          return [
-            { name: "2021", earnings: 1200000 },
-            { name: "2022", earnings: 1800000 },
-            { name: "2023", earnings: 2400000 },
-            { name: "2024", earnings: 3200000 },
-          ];
-        default:
-          return [];
-      }
-    };
-
-    setChartData(generateData());
-  }, [timeRange]);
+    if (earningsData) {
+      // Use real data from props
+      const filteredData = earningsData
+        .filter(item => item.timeRange === timeRange)
+        .map(item => ({
+          name: item.period,
+          earnings: item.earnings
+        }));
+      setChartData(filteredData);
+    } else {
+      // Fallback to mock data if no real data is provided
+      const generateMockData = () => {
+        switch (timeRange) {
+          case "weekly":
+            return [
+              { name: "Mon", earnings: 1500 },
+              { name: "Tue", earnings: 1800 },
+              { name: "Wed", earnings: 2200 },
+              { name: "Thu", earnings: 2500 },
+              { name: "Fri", earnings: 3200 },
+              { name: "Sat", earnings: 3800 },
+              { name: "Sun", earnings: 3000 },
+            ];
+          case "monthly":
+            return [
+              { name: "Jan", earnings: 12000 },
+              { name: "Feb", earnings: 15000 },
+              { name: "Mar", earnings: 18000 },
+              { name: "Apr", earnings: 22000 },
+              { name: "May", earnings: 28000 },
+              { name: "Jun", earnings: 32000 },
+              { name: "Jul", earnings: 38000 },
+              { name: "Aug", earnings: 42000 },
+              { name: "Sep", earnings: 48000 },
+            ];
+          case "yearly":
+            return [
+              { name: "2021", earnings: 120000 },
+              { name: "2022", earnings: 180000 },
+              { name: "2023", earnings: 240000 },
+              { name: "2024", earnings: 320000 },
+            ];
+          default:
+            return [];
+        }
+      };
+      setChartData(generateMockData());
+    }
+  }, [timeRange, earningsData]);
 
   const formatYAxisTick = (value: number) => {
     if (value >= 1000000) {

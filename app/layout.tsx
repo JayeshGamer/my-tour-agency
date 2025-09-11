@@ -7,6 +7,12 @@ import { Toaster } from "react-hot-toast";
 export const metadata: Metadata = {
   title: "Travel Agency",
   description: "Discover and book unforgettable tours worldwide.",
+  formatDetection: {
+    telephone: false,
+    date: false,
+    email: false,
+    address: false,
+  },
 };
 
 export default function RootLayout({

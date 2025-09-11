@@ -1,77 +1,35 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TourCard } from "@/components/tours/TourCard";
 import Testimonials from "@/components/Testimonials";
+import { db } from "@/lib/db";
+import { tours } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 
-interface FeaturedTour {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  duration: number;
-  location: string;
-  maxGroupSize: number;
-  difficulty: string;
-  images: string[];
-  rating: number;
-  reviewCount: number;
-  featured: boolean;
+async function getFeaturedTours() {
+  try {
+    const featuredTours = await db
+      .select()
+      .from(tours)
+      .where(
+        and(
+          eq(tours.featured, true),
+          eq(tours.status, 'Active')
+        )
+      )
+      .orderBy(desc(tours.createdAt))
+      .limit(3);
+
+    return featuredTours;
+  } catch (error) {
+    console.error('Error fetching featured tours:', error);
+    return [];
+  }
 }
 
-export default function HomePage() {
-  const [featuredTours, setFeaturedTours] = useState<FeaturedTour[]>([]);
-
-  // Mock data - replace with API call
-  useEffect(() => {
-    setFeaturedTours([
-      {
-        id: "1",
-        title: "Explore the Swiss Alps",
-        description: "Experience breathtaking mountain views and charming alpine villages in this unforgettable Swiss adventure.",
-        price: 2499,
-        duration: 7,
-        location: "Switzerland",
-        maxGroupSize: 12,
-        difficulty: "Moderate",
-        images: ["/api/placeholder/400/300"],
-        rating: 4.8,
-        reviewCount: 124,
-        featured: true,
-      },
-      {
-        id: "2",
-        title: "Japanese Cultural Journey",
-        description: "Immerse yourself in the rich culture and traditions of Japan, from ancient temples to modern Tokyo.",
-        price: 3299,
-        duration: 10,
-        location: "Japan",
-        maxGroupSize: 15,
-        difficulty: "Easy",
-        images: ["/api/placeholder/400/300"],
-        rating: 4.9,
-        reviewCount: 89,
-        featured: true,
-      },
-      {
-        id: "3",
-        title: "Safari Adventure in Kenya",
-        description: "Witness the incredible wildlife of the African savanna on this thrilling safari expedition.",
-        price: 3999,
-        duration: 8,
-        location: "Kenya",
-        maxGroupSize: 10,
-        difficulty: "Moderate",
-        images: ["/api/placeholder/400/300"],
-        rating: 4.7,
-        reviewCount: 156,
-        featured: true,
-      },
-    ]);
-  }, []);
+export default async function HomePage() {
+  const featuredTours = await getFeaturedTours();
 
   return (
     <div className="max-w-7xl mx-auto px-6 space-y-20">
@@ -122,9 +80,23 @@ export default function HomePage() {
           </Button>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featuredTours.map((tour) => (
-            <TourCard key={tour.id} tour={tour} />
-          ))}
+          {featuredTours.length > 0 ? (
+            featuredTours.map((tour) => (
+              <TourCard key={tour.id} tour={tour} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-lg text-muted-foreground mb-4">
+                No featured tours available at the moment.
+              </p>
+              <Button asChild>
+                <Link href="/tours">
+                  Browse All Tours
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 

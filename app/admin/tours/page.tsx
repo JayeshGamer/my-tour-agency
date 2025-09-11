@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { tours } from "@/lib/db/schema";
+import { tours, bookings } from "@/lib/db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import Link from "next/link";
 import { Plus, Edit, Trash2, Eye, Search } from "lucide-react";
@@ -31,19 +31,7 @@ import {
 import TourDeleteButton from "@/components/admin/TourDeleteButton";
 
 async function getToursData(searchQuery?: string, status?: string) {
-  const conditions = [];
-  
-  if (searchQuery) {
-    conditions.push(
-      sql`${tours.name} ILIKE ${'%' + searchQuery + '%'} OR ${tours.location} ILIKE ${'%' + searchQuery + '%'}`
-    );
-  }
-  
-  if (status && status !== 'all') {
-    conditions.push(eq(tours.status, status as 'Active' | 'Inactive'));
-  }
-
-  const toursData = await db
+  let query = db
     .select({
       id: tours.id,
       name: tours.name,
@@ -54,11 +42,28 @@ async function getToursData(searchQuery?: string, status?: string) {
       featured: tours.featured,
       maxGroupSize: tours.maxGroupSize,
       createdAt: tours.createdAt,
-      bookingCount: sql<number>`(SELECT COUNT(*) FROM ${tours} WHERE id = ${tours.id})`,
+      bookingCount: sql<number>`(SELECT COUNT(*) FROM ${bookings} WHERE tour_id = ${tours.id})`,
     })
-    .from(tours)
-    .where(conditions.length > 0 ? sql`${conditions.join(' AND ')}` : undefined)
-    .orderBy(desc(tours.createdAt));
+    .from(tours);
+
+  // Apply search filter
+  if (searchQuery) {
+    query = query.where(
+      sql`${tours.name} ILIKE ${'%' + searchQuery + '%'} OR ${tours.location} ILIKE ${'%' + searchQuery + '%'}`
+    );
+  }
+  
+  // Apply status filter if both search and status are provided
+  if (searchQuery && status && status !== 'all') {
+    query = query.where(
+      sql`(${tours.name} ILIKE ${'%' + searchQuery + '%'} OR ${tours.location} ILIKE ${'%' + searchQuery + '%'}) AND ${tours.status} = ${status}`
+    );
+  } else if (status && status !== 'all') {
+    // Apply only status filter
+    query = query.where(eq(tours.status, status as 'Active' | 'Inactive'));
+  }
+
+  const toursData = await query.orderBy(desc(tours.createdAt));
 
   return toursData;
 }
@@ -90,7 +95,7 @@ export default async function ToursPage({
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <form className="flex gap-4">
+          <form method="GET" className="flex gap-4">
             <div className="flex-1">
               <Input
                 name="q"
