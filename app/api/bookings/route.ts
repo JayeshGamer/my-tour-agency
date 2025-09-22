@@ -26,6 +26,11 @@ export async function GET(request: NextRequest) {
         bookingDate: bookings.bookingDate,
         startDate: bookings.startDate,
         status: bookings.status,
+        paymentStatus: bookings.paymentStatus,
+        paymentMethod: bookings.paymentMethod,
+        paymentReference: bookings.paymentReference,
+        paymentDate: bookings.paymentDate,
+        travelerInfo: bookings.travelerInfo,
         createdAt: bookings.createdAt,
         updatedAt: bookings.updatedAt,
         tour: {
@@ -67,10 +72,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tourId, numberOfPeople, startDate } = body;
+    const { tourId, numberOfPeople, startDate, travelerInfo } = body;
 
     if (!tourId || !numberOfPeople || !startDate) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (!travelerInfo || !travelerInfo.firstName || !travelerInfo.lastName || !travelerInfo.email) {
+      return NextResponse.json({ error: 'Complete traveler information is required' }, { status: 400 });
     }
 
     // Validate tour exists and get price
@@ -87,6 +96,9 @@ export async function POST(request: NextRequest) {
     // Calculate total price using pricePerPerson
     const totalPrice = parseFloat(tour[0].pricePerPerson) * numberOfPeople;
 
+    // Generate payment reference
+    const paymentReference = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
     const newBooking = await db.insert(bookings).values({
       userId: session.user.id,
       tourId,
@@ -95,7 +107,10 @@ export async function POST(request: NextRequest) {
       totalPrice: totalPrice.toString(),
       bookingDate: new Date(),
       status: 'Pending',
-      paymentIntentId: body.paymentIntentId,
+      paymentStatus: 'Pending',
+      paymentMethod: 'card', // Default, can be updated later
+      paymentReference,
+      travelerInfo,
     }).returning();
 
     return NextResponse.json(newBooking[0], { status: 201 });
@@ -120,7 +135,7 @@ export async function PATCH(request: NextRequest) {
     const isAdmin = userRow[0]?.role === 'Admin';
 
     const body = await request.json();
-    const { bookingId, status, paymentIntentId } = body;
+    const { bookingId, status, paymentStatus } = body;
 
     if (!bookingId) {
       return NextResponse.json({ error: 'Booking ID is required' }, { status: 400 });
@@ -135,13 +150,25 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid status value' }, { status: 400 });
     }
 
+    if (paymentStatus && !['Pending', 'Paid', 'Failed', 'Refunded'].includes(paymentStatus)) {
+      return NextResponse.json({ error: 'Invalid payment status value' }, { status: 400 });
+    }
+
     const updateData: {
       updatedAt: Date;
       status?: 'Pending' | 'Confirmed' | 'Canceled';
-      paymentIntentId?: string;
+      paymentStatus?: 'Pending' | 'Paid' | 'Failed' | 'Refunded';
+      paymentDate?: Date;
     } = { updatedAt: new Date() };
+    
     if (status) updateData.status = status as 'Pending' | 'Confirmed' | 'Canceled';
-    if (paymentIntentId) updateData.paymentIntentId = paymentIntentId;
+    if (paymentStatus) {
+      updateData.paymentStatus = paymentStatus as 'Pending' | 'Paid' | 'Failed' | 'Refunded';
+      // Set payment date when status becomes 'Paid'
+      if (paymentStatus === 'Paid') {
+        updateData.paymentDate = new Date();
+      }
+    }
 
     const updatedBooking = await db
       .update(bookings)

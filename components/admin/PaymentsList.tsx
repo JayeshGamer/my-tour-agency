@@ -34,13 +34,9 @@ import { useRouter } from "next/navigation";
 
 interface PaymentData {
   id: string;
-  paymentIntentId: string;
   amount: number;
   currency: string;
   status: string;
-  paymentMethodType: string;
-  cardBrand?: string;
-  cardLast4?: string;
   createdAt: Date;
   booking: {
     id: string;
@@ -51,7 +47,6 @@ interface PaymentData {
     tour: {
       title: string;
     };
-    totalGuests: number;
   } | null;
 }
 
@@ -152,10 +147,13 @@ export default function PaymentsList({ payments }: PaymentsListProps) {
     }
   };
 
+  // Handle case where payments might be undefined or null
+  const safePayments = payments || [];
+  
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>All Payments ({payments.length})</CardTitle>
+        <CardTitle>All Payments ({safePayments.length})</CardTitle>
         <Button 
           variant="outline" 
           onClick={handleSyncStripe}
@@ -180,11 +178,11 @@ export default function PaymentsList({ payments }: PaymentsListProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payments.length > 0 ? (
-              payments.map((payment) => (
+            {safePayments.length > 0 ? (
+              safePayments.map((payment) => (
                 <TableRow key={payment.id}>
                   <TableCell className="font-mono text-sm">
-                    {payment.paymentIntentId}
+                    {payment.id.substring(0, 16)}...
                   </TableCell>
                   <TableCell>
                     {payment.booking ? (
@@ -205,7 +203,7 @@ export default function PaymentsList({ payments }: PaymentsListProps) {
                           {payment.booking.tour.title}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {payment.booking.totalGuests} guest{payment.booking.totalGuests > 1 ? 's' : ''}
+                          Booking ID: {payment.booking.id.substring(0, 8)}...
                         </div>
                       </div>
                     ) : (
@@ -213,17 +211,11 @@ export default function PaymentsList({ payments }: PaymentsListProps) {
                     )}
                   </TableCell>
                   <TableCell className="font-semibold">
-                    ${(payment.amount / 100).toLocaleString()} {payment.currency.toUpperCase()}
+                    ₹{(payment.amount / 100).toLocaleString()} INR
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {payment.cardBrand && getCardBrand(payment.cardBrand)}
-                      {payment.cardLast4 && (
-                        <span className="font-mono text-sm">****{payment.cardLast4}</span>
-                      )}
-                      {!payment.cardBrand && (
-                        <span className="text-sm capitalize">{payment.paymentMethodType}</span>
-                      )}
+                      <span className="text-sm">Online Payment</span>
                     </div>
                   </TableCell>
                   <TableCell>

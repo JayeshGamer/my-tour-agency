@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
+import { formatCurrency } from "@/lib/currency";
 
 // Tour interface that matches database schema
 interface Tour {
@@ -170,12 +171,12 @@ export function TourCard({ tour }: TourCardProps) {
           <div className="flex flex-col">
             {tour.discount && (
               <span className="text-sm text-gray-500 line-through">
-                ${(parseFloat(tour.pricePerPerson || tour.price) * (1 + tour.discount / 100)).toFixed(0)}
+                {formatCurrency(parseFloat(tour.pricePerPerson || tour.price) * (1 + tour.discount / 100))}
               </span>
             )}
             <div className="flex items-baseline gap-1">
               <span className="text-2xl font-bold text-gray-900">
-                ${parseFloat(tour.pricePerPerson || tour.price).toLocaleString()}
+                {formatCurrency(tour.pricePerPerson || tour.price)}
               </span>
               <span className="text-sm text-gray-500">pp</span>
             </div>

@@ -13,9 +13,12 @@ const StatusUpdateSchema = z.object({
 // PATCH /api/admin/bookings/[id]/status - Update booking status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await params as required by Next.js 15
+    const { id: bookingId } = await params;
+    
     // Check authentication and admin role
     const session = await auth.api.getSession({
       headers: request.headers,
@@ -27,8 +30,6 @@ export async function PATCH(
         { status: 401 }
       );
     }
-
-    const bookingId = params.id;
     const body = await request.json();
     const validatedData = StatusUpdateSchema.parse(body);
 

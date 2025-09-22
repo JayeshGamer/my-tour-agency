@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { tours } from '@/lib/db/schema';
-import { eq, and, gte, lte, like, or } from 'drizzle-orm';
+import { eq, and, gte, lte, like, or, desc } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,8 +12,13 @@ export async function GET(request: NextRequest) {
     const difficulty = searchParams.get('difficulty');
     const location = searchParams.get('location');
     const featured = searchParams.get('featured');
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 50;
+    const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0;
 
     const conditions = [];
+
+    // Only get active tours
+    conditions.push(eq(tours.status, 'Active'));
 
     // Search filter
     if (search) {
@@ -26,12 +31,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Price filter
+    // Price filter (using pricePerPerson as per schema)
     if (minPrice) {
-      conditions.push(gte(tours.price, minPrice));
+      conditions.push(gte(tours.pricePerPerson, minPrice));
     }
     if (maxPrice) {
-      conditions.push(lte(tours.price, maxPrice));
+      conditions.push(lte(tours.pricePerPerson, maxPrice));
     }
 
     // Difficulty filter
@@ -49,10 +54,36 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(tours.featured, true));
     }
 
-    // Apply conditions if any and execute query
-    const result = conditions.length > 0
-      ? await db.select().from(tours).where(and(...conditions))
-      : await db.select().from(tours);
+    // Execute optimized query with pagination and ordering
+    const result = await db
+      .select({
+        id: tours.id,
+        title: tours.title,
+        name: tours.name,
+        description: tours.description,
+        price: tours.pricePerPerson, // Map to frontend expected field
+        pricePerPerson: tours.pricePerPerson,
+        duration: tours.duration,
+        maxGroupSize: tours.maxGroupSize,
+        difficulty: tours.difficulty,
+        location: tours.location,
+        category: tours.category,
+        startDates: tours.startDates,
+        images: tours.images,
+        imageUrl: tours.imageUrl,
+        included: tours.included,
+        notIncluded: tours.notIncluded,
+        itinerary: tours.itinerary,
+        featured: tours.featured,
+        status: tours.status,
+        createdAt: tours.createdAt,
+        updatedAt: tours.updatedAt,
+      })
+      .from(tours)
+      .where(and(...conditions))
+      .orderBy(desc(tours.featured), desc(tours.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     return NextResponse.json(result);
   } catch (error) {
@@ -73,17 +104,18 @@ export async function POST(request: NextRequest) {
       title: body.title,
       description: body.description,
       pricePerPerson: body.pricePerPerson || body.price, // Required field  
-      price: body.price,
+      price: body.pricePerPerson || body.price, // Keep for compatibility
       duration: body.duration,
       maxGroupSize: body.maxGroupSize,
       difficulty: body.difficulty,
       location: body.location,
       category: body.category || 'Adventure', // Required field
-      startDates: body.startDates,
-      images: body.images,
-      included: body.included,
-      notIncluded: body.notIncluded,
-      itinerary: body.itinerary,
+      startDates: body.startDates || [],
+      images: body.images || [],
+      imageUrl: body.imageUrl,
+      included: body.included || [],
+      notIncluded: body.notIncluded || [],
+      itinerary: body.itinerary || [],
       featured: body.featured || false,
       status: 'Active', // Default status
     }).returning();

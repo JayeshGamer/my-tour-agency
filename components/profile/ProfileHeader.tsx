@@ -119,7 +119,10 @@ export default function ProfileHeader({ user }: ProfileHeaderProps) {
             <Avatar className="h-24 w-24">
               <AvatarImage src={user.image || ''} alt={fullName} />
               <AvatarFallback className="text-2xl">
-                {fullName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                {fullName && typeof fullName === 'string' 
+                  ? fullName.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase()
+                  : 'U'
+                }
               </AvatarFallback>
             </Avatar>
           </div>

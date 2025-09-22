@@ -6,7 +6,8 @@ import ImageGallery from '@/components/tours/ImageGallery';
 import BookingSection from '@/components/tours/BookingSection';
 import ReviewsSection from '@/components/tours/ReviewsSection';
 import RelatedTours from '@/components/tours/RelatedTours';
-import { Star, MapPin, Clock, Users, DollarSign, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Star, MapPin, Clock, Users, IndianRupee, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { formatCurrency } from '@/lib/currency';
 
 interface TourDetailsPageProps {
   params: Promise<{
@@ -139,9 +140,9 @@ export default async function TourDetailsPage({ params }: TourDetailsPageProps) 
 
                 {/* Price */}
                 <div className="flex items-center gap-2 mb-6">
-                  <DollarSign className="w-6 h-6 text-green-600" />
+                  <IndianRupee className="w-6 h-6 text-green-600" />
                   <span className="text-3xl font-bold text-gray-900">
-                    ${tour.pricePerPerson}
+                    {formatCurrency(tour.pricePerPerson)}
                   </span>
                   <span className="text-gray-600">per person</span>
                 </div>

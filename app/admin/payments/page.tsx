@@ -17,63 +17,82 @@ import {
 import Link from "next/link";
 
 async function getPaymentsData() {
-  // Get bookings with payment intent IDs as proxy for payments
-  const bookingsData = await db
-    .select({
-      id: bookings.id,
-      paymentIntentId: bookings.paymentIntentId,
-      totalPrice: bookings.totalPrice,
-      status: bookings.status,
-      createdAt: bookings.createdAt,
-      userName: users.name,
-      userEmail: users.email,
-      tourTitle: tours.title
-    })
-    .from(bookings)
-    .leftJoin(users, eq(bookings.userId, users.id))
-    .leftJoin(tours, eq(bookings.tourId, tours.id))
-    .orderBy(desc(bookings.createdAt))
-    .limit(100);
+  try {
+    // Get bookings with payment intent IDs as proxy for payments
+    const bookingsData = await db
+      .select({
+        id: bookings.id,
+        paymentIntentId: bookings.paymentIntentId,
+        totalPrice: bookings.totalPrice,
+        status: bookings.status,
+        createdAt: bookings.createdAt,
+        userName: users.name,
+        userEmail: users.email,
+        tourTitle: tours.title
+      })
+      .from(bookings)
+      .leftJoin(users, eq(bookings.userId, users.id))
+      .leftJoin(tours, eq(bookings.tourId, tours.id))
+      .orderBy(desc(bookings.createdAt))
+      .limit(100);
 
-  // Transform to payment format for compatibility
-  const payments = bookingsData.map(booking => ({
-    id: booking.paymentIntentId || booking.id,
-    amount: parseFloat(booking.totalPrice.toString()) * 100, // Convert to cents
-    status: booking.status === 'Confirmed' ? 'succeeded' : 
-           booking.status === 'Pending' ? 'pending' : 'canceled',
-    currency: 'usd',
-    createdAt: booking.createdAt,
-    booking: {
-      id: booking.id,
-      user: {
-        name: booking.userName,
-        email: booking.userEmail
-      },
-      tour: {
-        title: booking.tourTitle
+    // Transform to payment format for compatibility
+    const payments = (bookingsData || []).map(booking => {
+      // Ensure all required fields are available
+      if (!booking) return null;
+      
+      return {
+        id: booking.paymentIntentId || booking.id,
+        amount: parseFloat((booking.totalPrice || '0').toString()) * 100, // Convert to cents
+        status: booking.status === 'Confirmed' ? 'succeeded' : 
+               booking.status === 'Pending' ? 'pending' : 'canceled',
+        currency: 'inr',
+        createdAt: booking.createdAt || new Date(),
+        booking: {
+          id: booking.id,
+          user: {
+            name: booking.userName || null,
+            email: booking.userEmail || 'unknown@example.com'
+          },
+          tour: {
+            title: booking.tourTitle || 'Unknown Tour'
+          }
+        }
+      };
+    }).filter(payment => payment !== null);
+
+    // Calculate statistics
+    const totalPayments = payments.length;
+    const succeededPayments = payments.filter(p => p.status === "succeeded").length;
+    const pendingPayments = payments.filter(p => p.status === "pending").length;
+    const canceledPayments = payments.filter(p => p.status === "canceled").length;
+    const totalRevenue = payments
+      .filter(p => p.status === "succeeded")
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+    return {
+      payments,
+      stats: {
+        total: totalPayments,
+        succeeded: succeededPayments,
+        pending: pendingPayments,
+        canceled: canceledPayments,
+        totalRevenue
       }
-    }
-  }));
-
-  // Calculate statistics
-  const totalPayments = payments.length;
-  const succeededPayments = payments.filter(p => p.status === "succeeded").length;
-  const pendingPayments = payments.filter(p => p.status === "pending").length;
-  const canceledPayments = payments.filter(p => p.status === "canceled").length;
-  const totalRevenue = payments
-    .filter(p => p.status === "succeeded")
-    .reduce((sum, p) => sum + p.amount, 0);
-
-  return {
-    payments,
-    stats: {
-      total: totalPayments,
-      succeeded: succeededPayments,
-      pending: pendingPayments,
-      canceled: canceledPayments,
-      totalRevenue
-    }
-  };
+    };
+  } catch (error) {
+    console.error('Error fetching payments data:', error);
+    return {
+      payments: [],
+      stats: {
+        total: 0,
+        succeeded: 0,
+        pending: 0,
+        canceled: 0,
+        totalRevenue: 0
+      }
+    };
+  }
 }
 
 export default async function PaymentsPage() {
@@ -97,6 +116,18 @@ export default async function PaymentsPage() {
   }
 
   const data = await getPaymentsData();
+  
+  // Handle case where data might be null or undefined
+  if (!data) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Error Loading Payments</h1>
+          <p className="text-gray-600 mb-4">Unable to load payment data at this time.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -161,7 +192,7 @@ export default async function PaymentsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  ${(data.stats.totalRevenue / 100).toLocaleString()}
+                  ₹{(data.stats.totalRevenue / 100).toLocaleString()}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-blue-400" />

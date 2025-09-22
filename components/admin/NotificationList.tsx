@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, MoreHorizontal, Check, Trash2 } from "lucide-react";
+import { Bell, MoreHorizontal, Check, Trash2, AlertTriangle, Info, CheckCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface Notification {
@@ -28,14 +28,37 @@ interface Notification {
 
 interface NotificationListProps {
   notifications: Notification[];
-  getNotificationIcon: (type: string) => JSX.Element;
-  getPriorityBadge: (priority: string) => JSX.Element;
 }
 
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case "error":
+      return <AlertTriangle className="h-5 w-5 text-red-500" />;
+    case "warning":
+      return <AlertTriangle className="h-5 w-5 text-orange-500" />;
+    case "success":
+      return <CheckCircle className="h-5 w-5 text-green-500" />;
+    default:
+      return <Info className="h-5 w-5 text-blue-500" />;
+  }
+};
+
+const getPriorityBadge = (priority: string) => {
+  const variants = {
+    high: "destructive",
+    medium: "default",
+    low: "secondary"
+  } as const;
+  
+  return (
+    <Badge variant={variants[priority as keyof typeof variants]}>
+      {priority.charAt(0).toUpperCase() + priority.slice(1)}
+    </Badge>
+  );
+};
+
 export default function NotificationList({ 
-  notifications, 
-  getNotificationIcon, 
-  getPriorityBadge 
+  notifications
 }: NotificationListProps) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 

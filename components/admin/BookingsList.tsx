@@ -25,7 +25,7 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  RefundIcon,
+  DollarSign,
   Mail
 } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -196,7 +196,7 @@ export default function BookingsList({ bookings }: BookingsListProps) {
                   </TableCell>
                   <TableCell>{item.booking.numberOfPeople}</TableCell>
                   <TableCell className="font-semibold">
-                    ${parseFloat(item.booking.totalPrice).toLocaleString()}
+                    ₹{parseFloat(item.booking.totalPrice).toLocaleString()}
                   </TableCell>
                   <TableCell className="text-sm">
                     {new Date(item.booking.bookingDate).toLocaleDateString()}
@@ -248,7 +248,7 @@ export default function BookingsList({ bookings }: BookingsListProps) {
                             className="text-orange-600"
                             onClick={() => handleRefund(item.booking.id, item.booking.paymentIntentId!)}
                           >
-                            <RefundIcon className="mr-2 h-4 w-4" />
+                            <DollarSign className="mr-2 h-4 w-4" />
                             Process Refund
                           </DropdownMenuItem>
                         )}

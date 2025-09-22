@@ -1,23 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '../../../../lib/auth';
-import Stripe from 'stripe';
-
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-if (!stripeSecretKey) {
-  console.error('STRIPE_SECRET_KEY is not set.');
-  throw new Error('STRIPE_SECRET_KEY is not set.');
-}
-
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2025-08-27.basil',
-});
+import { headers } from 'next/headers';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    const session = await auth.api.getSession({ headers: await headers() });
 
     if (!session) {
       return NextResponse.json(
@@ -27,42 +14,59 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { amount } = body; // Amount should be in cents
+    const { amount, cardDetails } = body;
 
-    if (!amount || amount < 50) { // Minimum $0.50
+    if (!amount || amount < 0.50) { // Minimum $0.50
       return NextResponse.json(
-        { error: 'Invalid amount' },
+        { error: 'Invalid amount. Minimum $0.50 required.' },
         { status: 400 }
       );
     }
 
-    try {
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: 'usd',
-        metadata: {
-          userId: session.user.id,
-          userEmail: session.user.email || '',
-        },
-        automatic_payment_methods: {
-          enabled: true,
-        },
-      });
+    // Validate card details for simulation
+    if (cardDetails) {
+      const { number, expiry, cvv } = cardDetails;
+      
+      if (!number || !expiry || !cvv) {
+        return NextResponse.json(
+          { error: 'Complete card details are required' },
+          { status: 400 }
+        );
+      }
 
-      return NextResponse.json({
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id,
-      });
-    } catch (error: unknown) {
-      console.error('Stripe payment intent error:', error);
-      const message = error instanceof Error ? error.message : 'Failed to create payment intent';
-      return NextResponse.json(
-        { error: message },
-        { status: 500 }
-      );
+      // Basic validation
+      const cardNumber = number.replace(/\s/g, '');
+      if (cardNumber.length < 16 || cvv.length < 3) {
+        return NextResponse.json(
+          { error: 'Invalid card details' },
+          { status: 400 }
+        );
+      }
+
+      // Check for test card numbers that should fail
+      const failureCards = ['4000000000000002', '4000000000000069', '4000000000000127'];
+      if (failureCards.includes(cardNumber)) {
+        return NextResponse.json(
+          { error: 'Your card was declined. Please try a different payment method.' },
+          { status: 400 }
+        );
+      }
     }
+
+    // Generate simulated payment reference
+    const paymentReference = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    return NextResponse.json({
+      success: true,
+      paymentReference,
+      amount: amount,
+      currency: 'USD',
+      status: 'validated',
+      message: 'Payment details validated successfully'
+    });
+
   } catch (error) {
-    console.error('Payment intent API error:', error);
+    console.error('Payment validation API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -26,8 +26,11 @@ async function getTour(tourId: string) {
 export default async function EditTourPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  // Await params as required by Next.js 15
+  const { id } = await params;
+  
   // Check authentication and admin role
   const session = await auth.api.getSession({
     headers: await headers(),
@@ -47,7 +50,7 @@ export default async function EditTourPage({
     );
   }
 
-  const tour = await getTour(params.id);
+  const tour = await getTour(id);
 
   if (!tour) {
     notFound();

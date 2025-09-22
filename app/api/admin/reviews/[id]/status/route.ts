@@ -6,9 +6,12 @@ import { eq } from "drizzle-orm";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await params as required by Next.js 15
+    const { id } = await params;
+    
     const session = await auth.api.getSession({
       headers: request.headers,
     });
@@ -32,7 +35,7 @@ export async function PATCH(
     const updatedReview = await db
       .update(reviews)
       .set({ status: status as any })
-      .where(eq(reviews.id, params.id))
+      .where(eq(reviews.id, id))
       .returning({
         id: reviews.id,
         status: reviews.status

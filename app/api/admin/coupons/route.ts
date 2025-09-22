@@ -1,11 +1,16 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { coupons } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    
     if (!session?.user || session.user.role !== "Admin") {
       return new Response(
         JSON.stringify({ error: "Unauthorized - Admin access required" }),
@@ -43,11 +48,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if coupon with same code exists
-    const existingCoupon = await prisma.coupon.findUnique({
-      where: { code }
-    });
+    const existingCoupon = await db
+      .select()
+      .from(coupons)
+      .where(eq(coupons.code, code.toUpperCase()))
+      .limit(1);
 
-    if (existingCoupon) {
+    if (existingCoupon.length > 0) {
       return new Response(
         JSON.stringify({ error: "A coupon with this code already exists" }),
         { status: 400 }
@@ -55,20 +62,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Create coupon
-    const coupon = await prisma.coupon.create({
-      data: {
+    const newCoupon = await db
+      .insert(coupons)
+      .values({
         code: code.toUpperCase(),
         type,
-        value,
+        value: value.toString(),
         isActive,
         usageCount: 0,
         usageLimit,
         validFrom: new Date(validFrom || new Date()),
         validUntil: validUntil ? new Date(validUntil) : null,
-        minOrderAmount,
-        maxDiscountAmount
-      }
-    });
+        minOrderAmount: minOrderAmount ? minOrderAmount.toString() : null,
+        maxDiscountAmount: maxDiscountAmount ? maxDiscountAmount.toString() : null
+      })
+      .returning();
+    
+    const coupon = newCoupon[0];
 
     return new Response(
       JSON.stringify({

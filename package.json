@@ -12,6 +12,8 @@
     "db:seed": "tsx lib/db/seed.ts",
     "fix:auth": "tsx scripts/fix-auth-passwords.ts",
     "db:migrate": "tsx scripts/run-migration.ts",
+    "db:migrate-payment": "tsx scripts/migrate-payment-schema.ts",
+    "seed:tours": "tsx scripts/seed-tours.ts",
     "db:generate": "npx drizzle-kit generate",
     "db:studio": "npx drizzle-kit studio"
   },

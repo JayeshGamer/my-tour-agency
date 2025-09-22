@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { TourCard } from "../../components/tours/TourCard";
 import { FiltersSection } from "../../components/tours/FiltersSection";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 export interface Tour {
   id: string;
@@ -38,9 +38,10 @@ export interface FilterState {
 
 export default function ToursPage() {
   const [tours, setTours] = useState<Tour[]>([]);
-  const [filteredTours, setFilteredTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalTours, setTotalTours] = useState(0);
   const [filters, setFilters] = useState<FilterState>({
     tourType: [],
     location: [],
@@ -48,24 +49,57 @@ export default function ToursPage() {
     duration: [],
     activities: [],
   });
+  
+  const toursPerPage = 9;
+  const totalPages = Math.ceil(totalTours / toursPerPage);
 
-  useEffect(() => {
-    fetchTours();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [filters, tours]);
-
-  const fetchTours = async () => {
+  // Fetch tours with filters and pagination
+  const fetchTours = useCallback(async (page = 1, filtersToApply = filters) => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/tours');
+      // Build query parameters
+      const params = new URLSearchParams({
+        limit: toursPerPage.toString(),
+        offset: ((page - 1) * toursPerPage).toString(),
+      });
+
+      // Add filter parameters
+      if (filtersToApply.location.length > 0) {
+        params.append('location', filtersToApply.location[0]);
+      }
+      if (filtersToApply.tourType.length > 0) {
+        params.append('difficulty', filtersToApply.tourType[0]);
+      }
+      if (filtersToApply.priceRange.length > 0) {
+        const priceRange = filtersToApply.priceRange[0];
+        if (priceRange === 'under500') {
+          params.append('maxPrice', '500');
+        } else if (priceRange === '500to1000') {
+          params.append('minPrice', '500');
+          params.append('maxPrice', '1000');
+        } else if (priceRange === '1000to2000') {
+          params.append('minPrice', '1000');
+          params.append('maxPrice', '2000');
+        } else if (priceRange === 'over2000') {
+          params.append('minPrice', '2000');
+        }
+      }
+
+      const response = await fetch(`/api/tours?${params}`);
       if (response.ok) {
         const data = await response.json();
         setTours(data);
-        setFilteredTours(data);
+        
+        // For pagination, we need total count - in a real app, this would come from the API
+        // For now, estimate based on returned results
+        if (data.length < toursPerPage && page === 1) {
+          setTotalTours(data.length);
+        } else if (data.length === toursPerPage) {
+          // This is an estimation - in real app, API should return total count
+          setTotalTours(Math.max(totalTours, page * toursPerPage + 1));
+        }
       } else {
-        // Use mock data as fallback
+        // Fallback mock data but only 3 items for performance
         const mockTours: Tour[] = [
           {
             id: "1",
@@ -76,7 +110,7 @@ export default function ToursPage() {
             location: "Switzerland",
             maxGroupSize: 12,
             difficulty: "Moderate",
-            images: ["/api/placeholder/400/300"],
+            images: ["/images/tours/everest-trek.jpg"],
             startDates: ["2024-06-15", "2024-07-20", "2024-08-10"],
             included: ["Professional guide", "Accommodation", "Meals"],
             notIncluded: ["Flights", "Insurance"],
@@ -96,7 +130,7 @@ export default function ToursPage() {
             location: "Japan",
             maxGroupSize: 15,
             difficulty: "Easy",
-            images: ["/api/placeholder/400/300"],
+            images: ["/images/tours/japan.jpg"],
             startDates: ["2024-05-01", "2024-09-15"],
             included: ["Temple visits", "Cultural experiences", "Local cuisine"],
             notIncluded: ["Flights", "Personal expenses"],
@@ -115,7 +149,7 @@ export default function ToursPage() {
             location: "Kenya",
             maxGroupSize: 10,
             difficulty: "Moderate",
-            images: ["/api/placeholder/400/300"],
+            images: ["/images/tours/santorini.jpg"],
             startDates: ["2024-06-01", "2024-08-15", "2024-10-01"],
             included: ["Safari drives", "Park fees", "Expert guides"],
             notIncluded: ["Flights", "Visas"],
@@ -127,95 +161,63 @@ export default function ToursPage() {
           },
         ];
         setTours(mockTours);
-        setFilteredTours(mockTours);
+        setTotalTours(3);
       }
     } catch (error) {
       console.error('Error fetching tours:', error);
+      setTours([]);
+      setTotalTours(0);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, toursPerPage, totalTours]);
 
-  const applyFilters = () => {
-    let filtered = [...tours];
+  // Initial load
+  useEffect(() => {
+    fetchTours(1);
+  }, []);
 
-    // Filter by tour type
-    if (filters.tourType.length > 0) {
-      filtered = filtered.filter(tour =>
-        filters.tourType.some(type => 
-          tour.difficulty.toLowerCase().includes(type.toLowerCase())
-        )
-      );
+  // Handle filter changes
+  useEffect(() => {
+    if (currentPage === 1) {
+      fetchTours(1, filters);
+    } else {
+      setCurrentPage(1); // Reset to first page when filters change
     }
+  }, [filters]);
 
-    // Filter by location
-    if (filters.location.length > 0) {
-      filtered = filtered.filter(tour =>
-        filters.location.some(loc => 
-          tour.location.toLowerCase().includes(loc.toLowerCase())
-        )
-      );
+  // Handle page changes
+  useEffect(() => {
+    if (currentPage > 1) {
+      fetchTours(currentPage, filters);
     }
+  }, [currentPage]);
 
-    // Filter by price range
-    if (filters.priceRange.length > 0) {
-      filtered = filtered.filter(tour => {
-        const price = parseFloat(tour.price);
-        return filters.priceRange.some(range => {
-          switch (range) {
-            case 'under500':
-              return price < 500;
-            case '500to1000':
-              return price >= 500 && price <= 1000;
-            case '1000to2000':
-              return price > 1000 && price <= 2000;
-            case 'over2000':
-              return price > 2000;
-            default:
-              return true;
-          }
-        });
-      });
+  // Memoized pagination controls
+  const paginationControls = useMemo(() => {
+    if (totalPages <= 1) return null;
+    
+    const pages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-
-    // Filter by duration
-    if (filters.duration.length > 0) {
-      filtered = filtered.filter(tour => {
-        return filters.duration.some(dur => {
-          switch (dur) {
-            case '1to3':
-              return tour.duration >= 1 && tour.duration <= 3;
-            case '4to7':
-              return tour.duration >= 4 && tour.duration <= 7;
-            case '8to14':
-              return tour.duration >= 8 && tour.duration <= 14;
-            case 'over14':
-              return tour.duration > 14;
-            default:
-              return true;
-          }
-        });
-      });
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
     }
+    
+    return { pages, startPage, endPage };
+  }, [currentPage, totalPages]);
 
-    // Filter by activities
-    if (filters.activities.length > 0) {
-      filtered = filtered.filter(tour =>
-        filters.activities.some(activity => {
-          const tourText = `${tour.title} ${tour.description} ${tour.included.join(' ')}`.toLowerCase();
-          return tourText.includes(activity.toLowerCase());
-        })
-      );
-    }
-
-    setFilteredTours(filtered);
-  };
-
-  const handleFilterChange = (newFilters: FilterState) => {
+  const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
-  };
+  }, []);
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setFilters({
       tourType: [],
       location: [],
@@ -223,7 +225,7 @@ export default function ToursPage() {
       duration: [],
       activities: [],
     });
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -288,8 +290,13 @@ export default function ToursPage() {
             {/* Results Summary */}
             <div className="mb-6 flex items-center justify-between">
               <p className="text-gray-700">
-                Showing <span className="font-semibold">{filteredTours.length}</span> of{" "}
-                <span className="font-semibold">{tours.length}</span> tours
+                Showing <span className="font-semibold">{tours.length}</span> of{" "}
+                <span className="font-semibold">{totalTours}</span> tours
+                {totalPages > 1 && (
+                  <span className="text-sm text-gray-500 ml-2">
+                    (Page {currentPage} of {totalPages})
+                  </span>
+                )}
               </p>
               <select className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label="Sort tours">
                 <option>Sort by: Featured</option>
@@ -301,37 +308,112 @@ export default function ToursPage() {
             </div>
 
             {/* Tours Grid */}
-            {loading ? (
-              <div className="grid grid-cols-3 gap-6">
-                {[...Array(6)].map((_, index) => (
-                  <div
-                    key={index}
-                    className="bg-gray-200 rounded-lg h-96 animate-pulse"
-                    role="status"
-                    aria-label="Loading tour"
-                  />
-                ))}
-              </div>
-            ) : filteredTours.length > 0 ? (
-              <div className="grid grid-cols-3 gap-6">
-                {filteredTours.map((tour) => (
-                  <TourCard key={tour.id} tour={tour} />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">
-                  No tours found matching your criteria.
-                </p>
-                <Button
-                  onClick={clearAllFilters}
-                  className="mt-4"
-                  variant="outline"
-                >
-                  Clear All Filters
-                </Button>
-              </div>
-            )}
+            <div className="space-y-8">
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {[...Array(9)].map((_, index) => (
+                    <div
+                      key={index}
+                      className="bg-gray-200 rounded-lg h-96 animate-pulse"
+                      role="status"
+                      aria-label="Loading tour"
+                    />
+                  ))}
+                </div>
+              ) : tours.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {tours.map((tour) => (
+                      <TourCard key={tour.id} tour={tour} />
+                    ))}
+                  </div>
+                  
+                  {/* Pagination Controls */}
+                  {paginationControls && (
+                    <div className="flex items-center justify-center space-x-2 pt-8">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage <= 1 || loading}
+                        className="flex items-center"
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1" />
+                        Previous
+                      </Button>
+                      
+                      {paginationControls.startPage > 1 && (
+                        <>
+                          <Button
+                            variant={1 === currentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(1)}
+                            disabled={loading}
+                          >
+                            1
+                          </Button>
+                          {paginationControls.startPage > 2 && (
+                            <span className="text-gray-500">...</span>
+                          )}
+                        </>
+                      )}
+                      
+                      {paginationControls.pages.map((page) => (
+                        <Button
+                          key={page}
+                          variant={page === currentPage ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          disabled={loading}
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                      
+                      {paginationControls.endPage < totalPages && (
+                        <>
+                          {paginationControls.endPage < totalPages - 1 && (
+                            <span className="text-gray-500">...</span>
+                          )}
+                          <Button
+                            variant={totalPages === currentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(totalPages)}
+                            disabled={loading}
+                          >
+                            {totalPages}
+                          </Button>
+                        </>
+                      )}
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage >= totalPages || loading}
+                        className="flex items-center"
+                      >
+                        Next
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">
+                    No tours found matching your criteria.
+                  </p>
+                  <Button
+                    onClick={clearAllFilters}
+                    className="mt-4"
+                    variant="outline"
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

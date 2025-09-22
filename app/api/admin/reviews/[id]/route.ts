@@ -1,14 +1,22 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { reviews } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    // Await params as required by Next.js 15
+    const { id } = await params;
+    
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    
     if (!session?.user || session.user.role !== "Admin") {
       return new Response(
         JSON.stringify({ error: "Unauthorized - Admin access required" }),
@@ -16,22 +24,18 @@ export async function DELETE(
       );
     }
 
-    // Check if review exists
-    const review = await prisma.review.findUnique({
-      where: { id: params.id }
-    });
+    // Check if review exists and delete it
+    const deletedReviews = await db
+      .delete(reviews)
+      .where(eq(reviews.id, id))
+      .returning();
 
-    if (!review) {
+    if (deletedReviews.length === 0) {
       return new Response(
         JSON.stringify({ error: "Review not found" }),
         { status: 404 }
       );
     }
-
-    // Delete the review
-    await prisma.review.delete({
-      where: { id: params.id }
-    });
 
     return new Response(
       JSON.stringify({

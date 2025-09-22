@@ -1,0 +1,656 @@
+[
+  {
+    "id": "TC001",
+    "title": "User Registration with Email and Password",
+    "description": "Verify that users can register successfully using valid email, password, first name, and last name.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the registration page."
+      },
+      {
+        "type": "action",
+        "description": "Enter valid email, password, first name, and last name."
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the registration is successful and user is logged in or redirected appropriately."
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "User Registration with Missing Fields",
+    "description": "Verify the system shows appropriate validation errors when required registration fields are missing or invalid.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to registration page."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to register without entering email."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that error message for missing email is displayed."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to register with invalid email format."
+      },
+      {
+        "type": "assertion",
+        "description": "Check that error message for invalid email format is displayed."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to register without password."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify error shown for missing password."
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "User Login with Email and Password",
+    "description": "Ensure users can log in using valid email and password credentials.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login page."
+      },
+      {
+        "type": "action",
+        "description": "Input valid registered email and password."
+      },
+      {
+        "type": "action",
+        "description": "Click login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Check user is successfully authenticated and redirected to the appropriate page."
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "User Login with Incorrect Credentials",
+    "description": "Verify that login fails with appropriate error message when the email or password is incorrect.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login page."
+      },
+      {
+        "type": "action",
+        "description": "Enter valid email but wrong password."
+      },
+      {
+        "type": "action",
+        "description": "Click login button."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify login fails and error message is shown."
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "User Login with Google OAuth",
+    "description": "Validate that users can authenticate using Google OAuth and a session is established.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login page."
+      },
+      {
+        "type": "action",
+        "description": "Click 'Sign in with Google' button."
+      },
+      {
+        "type": "action",
+        "description": "Complete OAuth flow with valid Google account."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user is logged in and redirected correctly."
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Tour Browsing and Filtering by Search and Attributes",
+    "description": "Confirm that users can browse tours and filter results using search text, price range, difficulty, location, and featured flags.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to tour catalog page."
+      },
+      {
+        "type": "action",
+        "description": "Enter a search keyword."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify tours shown match search keyword."
+      },
+      {
+        "type": "action",
+        "description": "Apply minPrice and maxPrice filters."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify only tours within price range are displayed."
+      },
+      {
+        "type": "action",
+        "description": "Filter tours by difficulty level."
+      },
+      {
+        "type": "assertion",
+        "description": "Only tours with specified difficulty are shown."
+      },
+      {
+        "type": "action",
+        "description": "Filter tours by location."
+      },
+      {
+        "type": "assertion",
+        "description": "Only tours from specified location are displayed."
+      },
+      {
+        "type": "action",
+        "description": "Apply featured filter."
+      },
+      {
+        "type": "assertion",
+        "description": "Only tours marked as featured appear."
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Admin CRUD Operations on Tours",
+    "description": "Verify that admin users can create, read, update, and delete tours successfully via the admin API.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Authenticate as admin user."
+      },
+      {
+        "type": "action",
+        "description": "Create a new tour with valid details."
+      },
+      {
+        "type": "assertion",
+        "description": "New tour is created and retrievable."
+      },
+      {
+        "type": "action",
+        "description": "Update existing tour details."
+      },
+      {
+        "type": "assertion",
+        "description": "Tour information is updated accordingly."
+      },
+      {
+        "type": "action",
+        "description": "Delete a tour."
+      },
+      {
+        "type": "assertion",
+        "description": "Tour is removed and no longer listed."
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Tour Booking with Valid Payment and Coupon",
+    "description": "Test booking creation flow including applying coupon code, Stripe payment intent creation, successful payment, and booking confirmation.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as a registered user."
+      },
+      {
+        "type": "action",
+        "description": "Select a tour and specify number of people and start date."
+      },
+      {
+        "type": "action",
+        "description": "Apply a valid discount coupon code."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify discount is applied correctly to booking total."
+      },
+      {
+        "type": "action",
+        "description": "Create payment intent via Stripe API."
+      },
+      {
+        "type": "assertion",
+        "description": "Stripe payment intent is successfully created with correct amount."
+      },
+      {
+        "type": "action",
+        "description": "Complete Stripe payment flow successfully."
+      },
+      {
+        "type": "assertion",
+        "description": "Booking is confirmed and user receives booking details."
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Booking Payment Failure Handling",
+    "description": "Ensure that booking process handles Stripe payment failures gracefully and informs user appropriately.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to pay for a booking with invalid or declined payment information."
+      },
+      {
+        "type": "assertion",
+        "description": "Verify payment failure is detected and user is notified with error message."
+      },
+      {
+        "type": "assertion",
+        "description": "Booking is not confirmed and no payment intent is left in inconsistent state."
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Admin Booking Status Update",
+    "description": "Test that admin can update booking status to 'Pending', 'Confirmed', and 'Canceled' correctly via the admin API.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Authenticate as admin."
+      },
+      {
+        "type": "action",
+        "description": "Update booking status to 'Pending'."
+      },
+      {
+        "type": "assertion",
+        "description": "Booking status updates to 'Pending'."
+      },
+      {
+        "type": "action",
+        "description": "Update booking status to 'Confirmed'."
+      },
+      {
+        "type": "assertion",
+        "description": "Booking status updates to 'Confirmed'."
+      },
+      {
+        "type": "action",
+        "description": "Update booking status to 'Canceled'."
+      },
+      {
+        "type": "assertion",
+        "description": "Booking status updates to 'Canceled'."
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "User Review Submission and Retrieval",
+    "description": "Verify users can submit a review with rating, comment, and title for a completed booking and retrieve their review.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as a user who has completed a booking."
+      },
+      {
+        "type": "action",
+        "description": "Submit a review with valid rating (1-5), comment, title, and booking ID."
+      },
+      {
+        "type": "assertion",
+        "description": "Review is stored and linked to user and tour."
+      },
+      {
+        "type": "action",
+        "description": "Retrieve reviews filtered by tour ID and user ID."
+      },
+      {
+        "type": "assertion",
+        "description": "Review submitted appears in the retrieved list."
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Admin Moderation of Reviews",
+    "description": "Ensure admins can delete inappropriate reviews and update review moderation status via admin API.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Authenticate as admin."
+      },
+      {
+        "type": "action",
+        "description": "Retrieve list of reviews."
+      },
+      {
+        "type": "action",
+        "description": "Delete a selected review."
+      },
+      {
+        "type": "assertion",
+        "description": "Review is removed from system and no longer retrievable."
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "User Profile Data Retrieval and Update",
+    "description": "Verify users can securely retrieve their profile information and update fields such as name and email.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Authenticate as user."
+      },
+      {
+        "type": "action",
+        "description": "Request user profile data."
+      },
+      {
+        "type": "assertion",
+        "description": "Profile data is returned correctly."
+      },
+      {
+        "type": "action",
+        "description": "Submit updates to profile fields (e.g., first name, last name)."
+      },
+      {
+        "type": "assertion",
+        "description": "Profile data is updated and persists on subsequent retrieval."
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "User Password Change Flow",
+    "description": "Confirm that users can change their password securely via the profile API and that password requirements are enforced.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Authenticate as user."
+      },
+      {
+        "type": "action",
+        "description": "Request to update password with valid new password meeting requirements."
+      },
+      {
+        "type": "assertion",
+        "description": "Password is updated successfully."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to update password with invalid format or weak password."
+      },
+      {
+        "type": "assertion",
+        "description": "Update is rejected with appropriate validation error."
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Wishlist Add, Remove and Retrieve Functionality",
+    "description": "Ensure users can add tours to wishlist, remove tours, and retrieve their current wishlist accurately.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as user."
+      },
+      {
+        "type": "action",
+        "description": "Add a tour to the wishlist."
+      },
+      {
+        "type": "assertion",
+        "description": "Tour is added and appears in wishlist retrieval."
+      },
+      {
+        "type": "action",
+        "description": "Remove a tour from wishlist."
+      },
+      {
+        "type": "assertion",
+        "description": "Tour is removed and no longer in wishlist."
+      },
+      {
+        "type": "action",
+        "description": "Retrieve wishlist."
+      },
+      {
+        "type": "assertion",
+        "description": "Wishlist contains the correct set of tours."
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Contact Form Submission Handling",
+    "description": "Validate that contact form submissions with name, email, phone, subject, message, and inquiry type are stored and accessible.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Fill out the contact form with valid data in all required fields."
+      },
+      {
+        "type": "action",
+        "description": "Submit the contact form."
+      },
+      {
+        "type": "assertion",
+        "description": "Form submission is accepted and data is stored for admin follow-up."
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Public Testimonials Display",
+    "description": "Ensure that public testimonials are retrieved and displayed correctly on the public pages.",
+    "category": "functional",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to testimonials section on the public website."
+      },
+      {
+        "type": "action",
+        "description": "Fetch public testimonials via API."
+      },
+      {
+        "type": "assertion",
+        "description": "Testimonials are displayed with correct content and formatting."
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Access Control Enforcement for Admin APIs",
+    "description": "Verify that all admin APIs (tours, bookings, users, reviews, coupons, notifications, logs) reject unauthorized access and accept authorized admin requests only.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt to access admin API endpoints without authentication."
+      },
+      {
+        "type": "assertion",
+        "description": "Access is denied with authentication error."
+      },
+      {
+        "type": "action",
+        "description": "Attempt access as non-admin authenticated user."
+      },
+      {
+        "type": "assertion",
+        "description": "Access is denied with authorization error."
+      },
+      {
+        "type": "action",
+        "description": "Authenticate as admin and access admin endpoints."
+      },
+      {
+        "type": "assertion",
+        "description": "Access is granted with correct returned data."
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Session Management and Logout Flow",
+    "description": "Verify that user session is maintained after login and session is properly invalidated on logout.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in with valid credentials."
+      },
+      {
+        "type": "assertion",
+        "description": "Session token is issued and maintained in client storage."
+      },
+      {
+        "type": "action",
+        "description": "Use get-session API to confirm active session."
+      },
+      {
+        "type": "assertion",
+        "description": "Session details are returned and valid."
+      },
+      {
+        "type": "action",
+        "description": "Perform logout via sign-out API."
+      },
+      {
+        "type": "assertion",
+        "description": "Session is cleared, and further authenticated requests fail."
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Accessibility Compliance Verification for Key Pages",
+    "description": "Validate the website's main pages (home, catalog, tour details, booking, profile, admin dashboard) comply with WCAG accessibility standards including keyboard navigation and screen reader support.",
+    "category": "ui",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate through pages using keyboard only."
+      },
+      {
+        "type": "assertion",
+        "description": "All interactive elements are accessible and focus order is logical."
+      },
+      {
+        "type": "action",
+        "description": "Use screen reader to navigate key pages."
+      },
+      {
+        "type": "assertion",
+        "description": "Content is read aloud logically with correct aria roles and labels."
+      }
+    ]
+  },
+  {
+    "id": "TC021",
+    "title": "Performance Testing for Tour Catalog Loading",
+    "description": "Assess that the tour catalog listing page loads within acceptable time thresholds under normal and peak desktop load conditions.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Load tour catalog page with typical dataset."
+      },
+      {
+        "type": "assertion",
+        "description": "Page loads completely within target performance metric (e.g. 2 seconds)."
+      },
+      {
+        "type": "action",
+        "description": "Simulate multiple concurrent users loading catalog."
+      },
+      {
+        "type": "assertion",
+        "description": "Page load performance remains acceptable."
+      }
+    ]
+  },
+  {
+    "id": "TC022",
+    "title": "Edge Case: Booking Maximum Group Size Validation",
+    "description": "Verify that booking requests with number of people exceeding the tour's maxGroupSize are rejected properly.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select a tour with a defined maxGroupSize."
+      },
+      {
+        "type": "action",
+        "description": "Attempt to create a booking with numberOfPeople greater than maxGroupSize."
+      },
+      {
+        "type": "assertion",
+        "description": "Booking creation is denied with validation error."
+      }
+    ]
+  }
+]

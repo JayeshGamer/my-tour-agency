@@ -21,8 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background font-sans antialiased flex flex-col">
+    <html lang="en" suppressHydrationWarning={true}>
+      <head>
+        <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
+      </head>
+      <body className="min-h-screen bg-background font-sans antialiased flex flex-col" suppressHydrationWarning={true}>
         <Toaster position="top-right" />
         <Header />
         <main className="flex-1 py-12">{children}</main>

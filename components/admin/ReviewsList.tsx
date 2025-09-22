@@ -86,10 +86,11 @@ const StarRating = ({ rating }: { rating: number }) => {
 };
 
 const getUserInitials = (name: string | null, email: string) => {
-  if (name) {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  if (name && typeof name === 'string') {
+    const initials = name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase();
+    return initials || (email && email.length > 0 ? email[0].toUpperCase() : 'U');
   }
-  return email[0].toUpperCase();
+  return email && email.length > 0 ? email[0].toUpperCase() : 'U';
 };
 
 export default function ReviewsList({ reviews }: ReviewsListProps) {

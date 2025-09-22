@@ -4,6 +4,7 @@ import { relations } from 'drizzle-orm';
 // Enums
 export const tourStatusEnum = pgEnum('tour_status', ['Active', 'Inactive']);
 export const bookingStatusEnum = pgEnum('booking_status', ['Pending', 'Confirmed', 'Canceled']);
+export const paymentStatusEnum = pgEnum('payment_status', ['Pending', 'Paid', 'Failed', 'Refunded']);
 export const userRoleEnum = pgEnum('user_role', ['User', 'Admin']);
 export const reviewStatusEnum = pgEnum('review_status', ['pending', 'approved', 'rejected']);
 
@@ -105,13 +106,25 @@ export const bookings = pgTable('bookings', {
   bookingDate: timestamp('booking_date').defaultNow().notNull(), // When booking was made
   startDate: timestamp('start_date').notNull(), // Tour start date
   status: bookingStatusEnum('status').default('Pending').notNull(),
-  paymentIntentId: varchar('payment_intent_id', { length: 255 }),
+  paymentStatus: paymentStatusEnum('payment_status').default('Pending').notNull(),
+  paymentMethod: varchar('payment_method', { length: 50 }), // 'card', 'bank_transfer', etc.
+  paymentReference: varchar('payment_reference', { length: 255 }), // Internal payment reference
+  paymentDate: timestamp('payment_date'), // When payment was completed
+  travelerInfo: json('traveler_info').$type<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    emergencyContact?: string;
+    specialRequirements?: string;
+  }>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
   userIdIdx: index('bookings_user_id_idx').on(table.userId),
   tourIdIdx: index('bookings_tour_id_idx').on(table.tourId),
   statusIdx: index('bookings_status_idx').on(table.status),
+  paymentStatusIdx: index('bookings_payment_status_idx').on(table.paymentStatus),
 }));
 
 // Reviews table (Matching Requirements)

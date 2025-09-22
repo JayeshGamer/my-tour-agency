@@ -12,6 +12,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { DateDisplay } from '@/components/ui/DateDisplay';
+import { DatePicker } from '@/components/ui/date-picker';
+import { formatCurrency } from '@/lib/currency';
 
 interface Tour {
   id: string;
@@ -32,16 +34,16 @@ interface BookingExtras {
 }
 
 const EXTRAS_PRICING = {
-  guidedTour: { name: 'Professional Guide', price: 150 },
-  insurance: { name: 'Travel Insurance', price: 50 },
-  mealPlan: { name: 'Full Meal Plan', price: 200 },
+  guidedTour: { name: 'Professional Guide', price: 12000 },
+  insurance: { name: 'Travel Insurance', price: 4000 },
+  mealPlan: { name: 'Full Meal Plan', price: 15000 },
 };
 
 export default function BookingSection({ tour }: BookingSectionProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const [numberOfPeople, setNumberOfPeople] = useState(1);
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [extras, setExtras] = useState<BookingExtras>({
     guidedTour: false,
     insurance: false,
@@ -86,7 +88,7 @@ export default function BookingSection({ tour }: BookingSectionProps) {
     const cartItem = {
       tourId: tour.id,
       tourName: tour.name,
-      date: selectedDate,
+      date: selectedDate?.toISOString(),
       numberOfPeople,
       extras,
       totalPrice,
@@ -119,7 +121,7 @@ export default function BookingSection({ tour }: BookingSectionProps) {
       const cartItem = {
         tourId: tour.id,
         tourName: tour.name,
-        date: selectedDate,
+        date: selectedDate?.toISOString(),
         numberOfPeople,
         extras,
         totalPrice,
@@ -209,24 +211,12 @@ export default function BookingSection({ tour }: BookingSectionProps) {
                 <Calendar className="w-4 h-4" />
                 Select Tour Date
               </Label>
-              <Select value={selectedDate} onValueChange={setSelectedDate}>
-                <SelectTrigger id="date">
-                  <SelectValue placeholder="Choose a date" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableDates.map((date) => (
-                    <SelectItem key={date} value={date}>
-                      <span suppressHydrationWarning>
-                        {new Date(date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <DatePicker
+                date={selectedDate}
+                onDateChange={setSelectedDate}
+                availableDates={availableDates}
+                placeholder="Choose a tour date"
+              />
             </div>
 
             {/* Extra Options */}
@@ -254,7 +244,7 @@ export default function BookingSection({ tour }: BookingSectionProps) {
                       </label>
                     </div>
                     <span className="text-sm text-gray-600">
-                      +${extra.price}/person
+                      +{formatCurrency(extra.price)}/person
                     </span>
                   </div>
                 ))}
@@ -270,36 +260,36 @@ export default function BookingSection({ tour }: BookingSectionProps) {
               {/* Base Price */}
               <div className="flex justify-between text-sm">
                 <span>Base Price ({numberOfPeople} {numberOfPeople === 1 ? 'person' : 'people'})</span>
-                <span>${(parseFloat(tour.pricePerPerson) * numberOfPeople).toFixed(2)}</span>
+                <span>{formatCurrency(parseFloat(tour.pricePerPerson) * numberOfPeople)}</span>
               </div>
 
               {/* Extras */}
               {extras.guidedTour && (
                 <div className="flex justify-between text-sm">
                   <span>Professional Guide</span>
-                  <span>+${(EXTRAS_PRICING.guidedTour.price * numberOfPeople).toFixed(2)}</span>
+                  <span>+{formatCurrency(EXTRAS_PRICING.guidedTour.price * numberOfPeople)}</span>
                 </div>
               )}
               {extras.insurance && (
                 <div className="flex justify-between text-sm">
                   <span>Travel Insurance</span>
-                  <span>+${(EXTRAS_PRICING.insurance.price * numberOfPeople).toFixed(2)}</span>
+                  <span>+{formatCurrency(EXTRAS_PRICING.insurance.price * numberOfPeople)}</span>
                 </div>
               )}
               {extras.mealPlan && (
                 <div className="flex justify-between text-sm">
                   <span>Full Meal Plan</span>
-                  <span>+${(EXTRAS_PRICING.mealPlan.price * numberOfPeople).toFixed(2)}</span>
+                  <span>+{formatCurrency(EXTRAS_PRICING.mealPlan.price * numberOfPeople)}</span>
                 </div>
               )}
 
               <div className="border-t pt-3">
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total Price</span>
-                  <span className="text-green-600">${totalPrice.toFixed(2)}</span>
+                  <span className="text-green-600">{formatCurrency(totalPrice)}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Price per person: ${(totalPrice / numberOfPeople).toFixed(2)}
+                  Price per person: {formatCurrency(totalPrice / numberOfPeople)}
                 </p>
               </div>
             </div>

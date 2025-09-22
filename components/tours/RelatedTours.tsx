@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Clock, Users, DollarSign, ArrowRight, Star } from 'lucide-react';
+import { MapPin, Clock, Users, IndianRupee, ArrowRight, Star } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { formatCurrency } from '@/lib/currency';
 
 interface Tour {
   id: string;
@@ -116,8 +117,8 @@ export default function RelatedTours({ tours }: RelatedToursProps) {
                   <span>Max {tour.maxGroupSize}</span>
                 </div>
                 <div className="flex items-center gap-1 text-gray-600">
-                  <DollarSign className="w-4 h-4" />
-                  <span className="font-semibold">${tour.pricePerPerson}</span>
+                  <IndianRupee className="w-4 h-4" />
+                  <span className="font-semibold">{formatCurrency(tour.pricePerPerson)}</span>
                 </div>
               </div>
             </CardContent>

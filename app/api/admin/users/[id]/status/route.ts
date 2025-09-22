@@ -1,14 +1,22 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    // Await params as required by Next.js 15
+    const { id } = await params;
+    
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    
     if (!session?.user || session.user.role !== "Admin") {
       return new Response(
         JSON.stringify({ error: "Unauthorized - Admin access required" }),
@@ -18,10 +26,20 @@ export async function PATCH(
 
     const { emailVerified } = await request.json();
 
-    const user = await prisma.user.update({
-      where: { id: params.id },
-      data: { emailVerified },
-    });
+    const updatedUsers = await db
+      .update(users)
+      .set({ emailVerified })
+      .where(eq(users.id, id))
+      .returning();
+    
+    if (updatedUsers.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "User not found" }),
+        { status: 404 }
+      );
+    }
+    
+    const user = updatedUsers[0];
 
     return new Response(
       JSON.stringify({

@@ -71,10 +71,11 @@ const getStatusBadge = (isVerified: boolean) => {
 };
 
 const getUserInitials = (name: string | null, email: string) => {
-  if (name) {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  if (name && typeof name === 'string') {
+    const initials = name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase();
+    return initials || email[0].toUpperCase();
   }
-  return email[0].toUpperCase();
+  return email && email.length > 0 ? email[0].toUpperCase() : 'U';
 };
 
 export default function UsersList({ users }: UsersListProps) {
