@@ -9,6 +9,10 @@
       "env": {
         "API_KEY": "${env:sk-user-jrrMgml-wB0IjRw9cUeElAvVE3dJCxGiNb2hMmaEOxXdx7FdNMIhC-HYoDnnPrmXKo_0ax2GG_2OkybG251uehTvt_1uDTYhg6sqZ5gbbRDwp9opkaLq9E2bbLEZLrZq1ys}"
       }
+    },
+    "browsermcp": {
+      "command": "npx",
+      "args": ["@browsermcp/mcp@latest"]
     }
   }
 }
