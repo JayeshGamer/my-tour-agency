@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: requestId } = await params;
+    const { id: requestId } = params;
     const isAdmin = session.user.role === 'Admin';
 
     // First check if user has access to this request
@@ -44,8 +44,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Fetch communications
-    const communications = await db
+    // Fetch communications without passing `undefined` into `and`.
+    // Use `unknown[]` instead of `any[]` to satisfy eslint rule against `any`.
+    const commConditions: unknown[] = [eq(tourRequestCommunications.requestId, requestId)];
+    if (!isAdmin) commConditions.push(eq(tourRequestCommunications.isInternal, false));
+
+    const commQuery = db
       .select({
         id: tourRequestCommunications.id,
         message: tourRequestCommunications.message,
@@ -60,15 +64,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         }
       })
       .from(tourRequestCommunications)
-      .leftJoin(users, eq(tourRequestCommunications.senderId, users.id))
-      .where(
-        and(
-          eq(tourRequestCommunications.requestId, requestId),
-          // Hide internal messages from non-admin users
-          isAdmin ? undefined : eq(tourRequestCommunications.isInternal, false)
-        )
-      )
-      .orderBy(desc(tourRequestCommunications.createdAt));
+      .leftJoin(users, eq(tourRequestCommunications.senderId, users.id));
+
+    let communications;
+    if (commConditions.length === 1) {
+      communications = await commQuery.where(commConditions[0]).orderBy(desc(tourRequestCommunications.createdAt));
+    } else {
+      communications = await commQuery.where(and(...commConditions)).orderBy(desc(tourRequestCommunications.createdAt));
+    }
 
     return NextResponse.json({ communications });
 
@@ -90,7 +93,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: requestId } = await params;
+    const { id: requestId } = params;
     const isAdmin = session.user.role === 'Admin';
     const body = await request.json();
     const validatedData = messageSchema.parse(body);
@@ -158,7 +161,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid message data', details: error.errors },
+        { error: 'Invalid message data', details: error.issues },
         { status: 400 }
       );
     }
