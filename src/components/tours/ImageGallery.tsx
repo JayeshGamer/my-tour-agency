@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Expand } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription } from '@/components/ui/dialog';
 
 interface ImageGalleryProps {
   images: string[];
@@ -131,6 +131,9 @@ export default function ImageGallery({ images, mainImage }: ImageGalleryProps) {
       {/* Lightbox Dialog */}
       <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
         <DialogContent className="max-w-5xl w-full p-0">
+          <DialogDescription className="sr-only">
+            Image {selectedIndex + 1} of {allImages.length}
+          </DialogDescription>
           <div className="relative">
             <div className="aspect-[16/9] relative bg-black">
               {allImages[selectedIndex] && (

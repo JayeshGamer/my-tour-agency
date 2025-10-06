@@ -62,6 +62,13 @@ const navSections = [
         description: "Manage tour packages",
       },
       {
+        label: "Custom Tour Requests",
+        href: "/admin/custom-tour-requests",
+        icon: MapPin,
+        description: "Manage customer requests and quotes",
+        badge: 2,
+      },
+      {
         label: "Bookings",
         href: "/admin/bookings",
         icon: CalendarCheck,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import AdminNavigation from "../../components/admin/AdminNavigation";
+import HydrationSafe from "@/components/ui/HydrationSafe";
 
 export default async function AdminLayout({
   children,
@@ -29,7 +30,12 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <AdminNavigation user={session.user} />
+      <HydrationSafe
+        className="flex-shrink-0"
+        fallback={<div className="w-64 bg-white border-r border-gray-200" />}
+      >
+        <AdminNavigation user={session.user} />
+      </HydrationSafe>
       <div className="flex-1 flex flex-col">
         <main className="flex-1 p-8">
           <div className="max-w-7xl mx-auto">

@@ -37,10 +37,22 @@ interface CartItem {
   timestamp: string;
 }
 
+interface CustomTourData {
+  type: 'custom_tour';
+  requestId: string;
+  destination: string;
+  amount: number;
+  currency: string;
+  groupSize: number;
+  dates: Array<{start: string; end: string; flexible: boolean}>;
+  breakdown: Record<string, number>;
+}
+
 interface CheckoutFormProps {
   user: User;
-  cartItems: CartItem[];
-  onSuccess: () => void;
+  cartItems?: CartItem[];
+  customTourData?: CustomTourData | null;
+  onSuccess?: () => void;
 }
 
 const checkoutSchema = z.object({
@@ -61,7 +73,7 @@ const formatINR = (amount: number): string => {
   }).format(amount);
 };
 
-export default function CheckoutForm({ user, cartItems, onSuccess }: CheckoutFormProps) {
+export default function CheckoutForm({ user, cartItems, customTourData, onSuccess }: CheckoutFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState('');
@@ -83,12 +95,15 @@ export default function CheckoutForm({ user, cartItems, onSuccess }: CheckoutFor
     },
   });
 
-  // Calculate totals with correct price per person calculation
-  const subtotal = cartItems.reduce((sum, item) => {
-    const pricePerPersonAmount = parseFloat(item.pricePerPerson);
-    const itemTotal = pricePerPersonAmount * item.numberOfPeople;
-    return sum + itemTotal;
-  }, 0);
+  // Calculate totals - handle both cart items and custom tours
+  const subtotal = customTourData
+    ? customTourData.amount
+    : (cartItems || []).reduce((sum, item) => {
+        const pricePerPersonAmount = parseFloat(item.pricePerPerson);
+        const itemTotal = pricePerPersonAmount * item.numberOfPeople;
+        return sum + itemTotal;
+      }, 0);
+
   const taxesAndFees = subtotal * 0.025; // 2.5% taxes and fees
   const total = subtotal - couponDiscount + taxesAndFees;
 
@@ -161,7 +176,8 @@ export default function CheckoutForm({ user, cartItems, onSuccess }: CheckoutFor
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          cartItems,
+          cartItems: customTourData ? undefined : cartItems, // Only send cartItems for regular tours
+          customTourData: customTourData || undefined, // Send custom tour data when available
           paymentMethod: 'card',
           cardDetails,
           travelerInfo: {
@@ -180,8 +196,14 @@ export default function CheckoutForm({ user, cartItems, onSuccess }: CheckoutFor
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Booking completed successfully!');
-        onSuccess();
+        if (customTourData) {
+          toast.success('Custom tour payment completed successfully!');
+          // Redirect to bookings page to see the confirmed booking
+          window.location.href = '/bookings';
+        } else {
+          toast.success('Booking completed successfully!');
+          if (onSuccess) onSuccess();
+        }
       } else {
         toast.error(data.error || 'Failed to complete booking');
       }
@@ -210,6 +232,7 @@ export default function CheckoutForm({ user, cartItems, onSuccess }: CheckoutFor
         <div className="space-y-6">
           <BookingSummary
             cartItems={cartItems}
+            customTourData={customTourData}
             subtotal={subtotal}
             discount={couponDiscount}
             couponCode={couponApplied}

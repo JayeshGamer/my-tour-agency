@@ -7,6 +7,10 @@ export const bookingStatusEnum = pgEnum('booking_status', ['Pending', 'Confirmed
 export const paymentStatusEnum = pgEnum('payment_status', ['Pending', 'Paid', 'Failed', 'Refunded']);
 export const userRoleEnum = pgEnum('user_role', ['User', 'Admin']);
 export const reviewStatusEnum = pgEnum('review_status', ['pending', 'approved', 'rejected']);
+export const requestStatusEnum = pgEnum('request_status', ['submitted', 'under_review', 'quoted', 'approved', 'rejected', 'converted_to_booking']);
+export const requestPriorityEnum = pgEnum('request_priority', ['low', 'normal', 'high', 'urgent']);
+export const accommodationLevelEnum = pgEnum('accommodation_level', ['budget', 'mid-range', 'luxury']);
+export const transportationTypeEnum = pgEnum('transportation_type', ['flight', 'train', 'car', 'mixed']);
 
 // Users table (Better Auth compatible + Requirements)
 export const users = pgTable('users', {
@@ -67,28 +71,85 @@ export const verifications = pgTable('verifications', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// Tours table (Matching Requirements)
+// Custom Tour Requests table (New) - Define before tours table to avoid forward reference
+export const customTourRequests = pgTable('custom_tour_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id),
+
+  // Travel Requirements
+  destination: text('destination').notNull(),
+  preferredDates: json('preferred_dates').$type<{start: string; end: string; flexible: boolean}[]>(),
+  alternativeDates: json('alternative_dates').$type<{start: string; end: string; flexible: boolean}[]>(),
+  groupSize: integer('group_size').notNull(),
+  groupComposition: json('group_composition').$type<{adults: number; children: number; ages: number[]}>().notNull(),
+  budgetRange: json('budget_range').$type<{min: number; max: number; perPerson: boolean; currency: string}>().notNull(),
+
+  // Preferences
+  accommodationPreference: accommodationLevelEnum('accommodation_preference'),
+  activityPreferences: json('activity_preferences').$type<string[]>(), // adventure, cultural, relaxation, etc.
+  transportationPreference: transportationTypeEnum('transportation_preference'),
+  mealPreferences: json('meal_preferences').$type<string[]>(), // veg, non-veg, jain, special dietary
+  specialRequirements: text('special_requirements'),
+
+  // Request Status
+  status: requestStatusEnum('status').default('submitted').notNull(),
+  priority: requestPriorityEnum('priority').default('normal').notNull(),
+
+  // Admin Notes & Quote
+  adminNotes: text('admin_notes'),
+  quoteDetails: json('quote_details').$type<{
+    totalAmount: number;
+    breakdown: Record<string, number>;
+    validity: string;
+    currency: string;
+    terms?: string;
+  }>(),
+  quotedAt: timestamp('quoted_at'),
+  quotedBy: uuid('quoted_by').references(() => users.id),
+
+  // Additional Details
+  specialOccasion: text('special_occasion'), // honeymoon, anniversary, family reunion, etc.
+  previousTravelExperience: text('previous_travel_experience'),
+  preferredContactMethod: varchar('preferred_contact_method', { length: 50 }), // email, phone, whatsapp
+  bestTimeToContact: varchar('best_time_to_contact', { length: 100 }),
+  additionalNotes: text('additional_notes'),
+
+  // Tracking
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  reviewedAt: timestamp('reviewed_at'),
+  reviewedBy: uuid('reviewed_by').references(() => users.id),
+}, (table) => ({
+  userIdIdx: index('custom_tour_requests_user_id_idx').on(table.userId),
+  statusIdx: index('custom_tour_requests_status_idx').on(table.status),
+  destinationIdx: index('custom_tour_requests_destination_idx').on(table.destination),
+  quotedByIdx: index('custom_tour_requests_quoted_by_idx').on(table.quotedBy),
+}));
+
+// Tours table (Modified to add tour_type for better categorization)
 export const tours = pgTable('tours', {
   id: uuid('id').defaultRandom().primaryKey(),
-  name: varchar('name', { length: 255 }).notNull(), // Tour name as per requirements
-  title: varchar('title', { length: 255 }).notNull(), // Keeping for compatibility
+  name: varchar('name', { length: 255 }).notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
   description: text('description').notNull(),
   location: varchar('location', { length: 255 }).notNull(),
-  duration: integer('duration').notNull(), // in days
+  duration: integer('duration').notNull(),
   pricePerPerson: decimal('price_per_person', { precision: 10, scale: 2 }).notNull(),
-  price: decimal('price', { precision: 10, scale: 2 }).notNull(), // Keeping for compatibility
-  category: varchar('category', { length: 100 }).notNull(), // Type of tour
+  price: decimal('price', { precision: 10, scale: 2 }).notNull(),
+  category: varchar('category', { length: 100 }).notNull(),
   difficulty: varchar('difficulty', { length: 50 }).notNull(),
   maxGroupSize: integer('max_group_size').notNull(),
-  imageUrl: text('image_url'), // Primary image URL
-  images: json('images').$type<string[]>().notNull(), // Additional images
+  imageUrl: text('image_url'),
+  images: json('images').$type<string[]>().notNull(),
   status: tourStatusEnum('status').default('Active').notNull(),
+  tourType: varchar('tour_type', { length: 50 }).default('standard').notNull(), // standard, premium, custom_created
   startDates: json('start_dates').$type<string[]>().notNull(),
   included: json('included').$type<string[]>().notNull(),
   notIncluded: json('not_included').$type<string[]>().notNull(),
   itinerary: json('itinerary').$type<{day: number; title: string; description: string}[]>().notNull(),
   featured: boolean('featured').default(false).notNull(),
-  createdBy: uuid('created_by').references(() => users.id), // User who created the tour (null for admin-created tours)
+  createdBy: uuid('created_by').references(() => users.id),
+  sourceRequestId: uuid('source_request_id').references(() => customTourRequests.id), // if created from custom request
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
@@ -96,22 +157,25 @@ export const tours = pgTable('tours', {
   locationIdx: index('tours_location_idx').on(table.location),
   statusIdx: index('tours_status_idx').on(table.status),
   createdByIdx: index('tours_created_by_idx').on(table.createdBy),
+  tourTypeIdx: index('tours_tour_type_idx').on(table.tourType),
 }));
 
-// Bookings table (Matching Requirements)
+// Bookings table (Modified to add source tracking)
 export const bookings = pgTable('bookings', {
   id: uuid('id').defaultRandom().primaryKey(),
   tourId: uuid('tour_id').notNull().references(() => tours.id),
   userId: uuid('user_id').notNull().references(() => users.id),
   numberOfPeople: integer('number_of_people').notNull(),
   totalPrice: decimal('total_price', { precision: 10, scale: 2 }).notNull(),
-  bookingDate: timestamp('booking_date').defaultNow().notNull(), // When booking was made
-  startDate: timestamp('start_date').notNull(), // Tour start date
+  bookingDate: timestamp('booking_date').defaultNow().notNull(),
+  startDate: timestamp('start_date').notNull(),
   status: bookingStatusEnum('status').default('Pending').notNull(),
   paymentStatus: paymentStatusEnum('payment_status').default('Pending').notNull(),
-  paymentMethod: varchar('payment_method', { length: 50 }), // 'card', 'bank_transfer', etc.
-  paymentReference: varchar('payment_reference', { length: 255 }), // Internal payment reference
-  paymentDate: timestamp('payment_date'), // When payment was completed
+  paymentMethod: varchar('payment_method', { length: 50 }),
+  paymentReference: varchar('payment_reference', { length: 255 }),
+  paymentDate: timestamp('payment_date'),
+  bookingSource: varchar('booking_source', { length: 50 }).default('direct').notNull(), // direct, custom_request
+  sourceRequestId: uuid('source_request_id').references(() => customTourRequests.id), // link to original request
   travelerInfo: json('traveler_info').$type<{
     firstName: string;
     lastName: string;
@@ -127,6 +191,21 @@ export const bookings = pgTable('bookings', {
   tourIdIdx: index('bookings_tour_id_idx').on(table.tourId),
   statusIdx: index('bookings_status_idx').on(table.status),
   paymentStatusIdx: index('bookings_payment_status_idx').on(table.paymentStatus),
+  sourceRequestIdIdx: index('bookings_source_request_id_idx').on(table.sourceRequestId),
+}));
+
+// Tour Request Communications table (New) - for admin-customer communication
+export const tourRequestCommunications = pgTable('tour_request_communications', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  requestId: uuid('request_id').notNull().references(() => customTourRequests.id, { onDelete: 'cascade' }),
+  senderId: uuid('sender_id').notNull().references(() => users.id),
+  message: text('message').notNull(),
+  isInternal: boolean('is_internal').default(false).notNull(), // true for admin-only notes
+  attachments: json('attachments').$type<string[]>(), // file URLs
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  requestIdIdx: index('tour_request_communications_request_id_idx').on(table.requestId),
+  senderIdIdx: index('tour_request_communications_sender_id_idx').on(table.senderId),
 }));
 
 // Reviews table (Matching Requirements)
@@ -382,3 +461,27 @@ export const settingsRelations = relations(settings, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export const customTourRequestsRelations = relations(customTourRequests, ({ one, many }) => ({
+  user: one(users, {
+    fields: [customTourRequests.userId],
+    references: [users.id],
+  }),
+  tours: many(tours, {
+    fields: [customTourRequests.id],
+    references: [tours.sourceRequestId],
+  }),
+  communications: many(tourRequestCommunications),
+}));
+
+export const tourRequestCommunicationsRelations = relations(tourRequestCommunications, ({ one }) => ({
+  request: one(customTourRequests, {
+    fields: [tourRequestCommunications.requestId],
+    references: [customTourRequests.id],
+  }),
+  sender: one(users, {
+    fields: [tourRequestCommunications.senderId],
+    references: [users.id],
+  }),
+}));
+

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { bookings } from '../../../lib/db/schema';
+import { bookings, tours, customTourRequests } from '../../../lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { headers } from 'next/headers';
 
 export async function POST(request: NextRequest) {
@@ -18,14 +19,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       cartItems,
+      customTourData,
       paymentMethod,
       cardDetails,
-      travelerInfo
+      travelerInfo,
+      totalAmount
     } = body;
 
-    if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+    // Validate that we have either cart items OR custom tour data
+    const hasCartItems = cartItems && Array.isArray(cartItems) && cartItems.length > 0;
+    const hasCustomTour = customTourData && customTourData.type === 'custom_tour';
+
+    if (!hasCartItems && !hasCustomTour) {
       return NextResponse.json(
-        { error: 'Cart items are required' },
+        { error: 'Either cart items or custom tour data is required' },
         { status: 400 }
       );
     }
@@ -62,62 +69,157 @@ export async function POST(request: NextRequest) {
     const paymentReference = `PAY-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const paymentDate = new Date();
 
-    // Create bookings for each cart item
-    const bookingPromises = cartItems.map(async (item: {
-      tourId: string;
-      tourName: string;
-      numberOfPeople: number;
-      totalPrice: number;
-      date: string;
-    }) => {
+    // Handle different booking types
+    if (hasCustomTour) {
+      // Handle custom tour booking - SIMPLIFIED APPROACH
       try {
+        // Instead of creating a complex tour record, let's use a simpler approach
+        // We'll create a minimal tour record that definitely works
+
+        const [customTourRecord] = await db.insert(tours).values({
+          name: `Custom Tour - ${customTourData.destination}`,
+          title: `Custom Tour to ${customTourData.destination}`,
+          description: `Custom tour package for ${customTourData.destination}. This is a personalized itinerary created based on customer requirements.`,
+          location: customTourData.destination,
+          duration: 7, // Default duration
+          pricePerPerson: (customTourData.amount / customTourData.groupSize).toFixed(2),
+          price: customTourData.amount.toFixed(2),
+          category: 'Custom',
+          difficulty: 'Moderate',
+          maxGroupSize: customTourData.groupSize,
+          imageUrl: '/images/tours/placeholder-tour.svg',
+          images: ['/images/tours/placeholder-tour.svg'],
+          status: 'Active',
+          tourType: 'custom_created',
+          startDates: [customTourData.dates[0].start],
+          included: ['Accommodation', 'Transportation', 'Activities'],
+          notIncluded: ['Personal expenses', 'Tips'],
+          itinerary: [
+            {
+              day: 1,
+              title: 'Arrival',
+              description: 'Arrive at destination and check-in'
+            }
+          ],
+          featured: false,
+          sourceRequestId: customTourData.requestId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }).returning();
+
+        // Now create the booking with the created tour ID
         const [booking] = await db.insert(bookings).values({
           userId: session.user.id,
-          tourId: item.tourId,
-          numberOfPeople: item.numberOfPeople,
-          totalPrice: item.totalPrice.toString(),
-          startDate: new Date(item.date),
+          tourId: customTourRecord.id,
+          numberOfPeople: customTourData.groupSize,
+          totalPrice: totalAmount.toString(),
+          startDate: new Date(customTourData.dates[0].start),
           status: 'Confirmed',
           paymentStatus: 'Paid',
           paymentMethod: paymentMethod || 'card',
           paymentReference,
           paymentDate,
-          travelerInfo: travelerInfo || {
-            firstName: session.user.name?.split(' ')[0] || 'Unknown',
-            lastName: session.user.name?.split(' ').slice(1).join(' ') || 'User',
-            email: session.user.email || '',
-            phone: '',
+          bookingSource: 'custom_request',
+          sourceRequestId: customTourData.requestId,
+          travelerInfo: {
+            firstName: travelerInfo?.fullName?.split(' ')[0] || session.user.name?.split(' ')[0] || 'Unknown',
+            lastName: travelerInfo?.fullName?.split(' ').slice(1).join(' ') || session.user.name?.split(' ').slice(1).join(' ') || 'User',
+            email: travelerInfo?.email || session.user.email || '',
+            phone: travelerInfo?.phone || '',
+            specialRequirements: travelerInfo?.specialNotes || ''
           },
           createdAt: new Date(),
           updatedAt: new Date(),
         }).returning();
 
-        return booking;
-      } catch (error) {
-        console.error('Error creating booking for tour:', item.tourId, error);
-        throw new Error(`Failed to create booking for tour: ${item.tourName}`);
-      }
-    });
+        // Update the custom tour request status to 'converted_to_booking'
+        await db
+          .update(customTourRequests)
+          .set({
+            status: 'converted_to_booking',
+            updatedAt: new Date()
+          })
+          .where(eq(customTourRequests.id, customTourData.requestId));
 
-    try {
-      const createdBookings = await Promise.all(bookingPromises);
-      
-      return NextResponse.json({
-        success: true,
-        bookings: createdBookings,
-        paymentReference,
-        message: 'Bookings created successfully'
+        return NextResponse.json({
+          success: true,
+          bookings: [booking],
+          paymentReference,
+          bookingType: 'custom_tour',
+          message: 'Custom tour payment completed successfully!'
+        });
+
+      } catch (error) {
+        console.error('Error creating custom tour booking:', error);
+        return NextResponse.json(
+          {
+            error: 'Custom tour booking failed. Please try again.',
+            details: error instanceof Error ? error.message : 'Unknown error'
+          },
+          { status: 500 }
+        );
+      }
+    } else {
+      // Handle regular cart item bookings
+      const bookingPromises = cartItems.map(async (item: {
+        tourId: string;
+        tourName: string;
+        numberOfPeople: number;
+        totalPrice: number;
+        date: string;
+      }) => {
+        try {
+          const [booking] = await db.insert(bookings).values({
+            userId: session.user.id,
+            tourId: item.tourId,
+            numberOfPeople: item.numberOfPeople,
+            totalPrice: item.totalPrice.toString(),
+            startDate: new Date(item.date),
+            status: 'Confirmed',
+            paymentStatus: 'Paid',
+            paymentMethod: paymentMethod || 'card',
+            paymentReference,
+            paymentDate,
+            bookingSource: 'direct', // Use existing bookingSource field
+            travelerInfo: {
+              firstName: travelerInfo?.fullName?.split(' ')[0] || session.user.name?.split(' ')[0] || 'Unknown',
+              lastName: travelerInfo?.fullName?.split(' ').slice(1).join(' ') || session.user.name?.split(' ').slice(1).join(' ') || 'User',
+              email: travelerInfo?.email || session.user.email || '',
+              phone: travelerInfo?.phone || '',
+              specialRequirements: travelerInfo?.specialNotes || ''
+            },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          }).returning();
+
+          return booking;
+        } catch (error) {
+          console.error('Error creating booking for tour:', item.tourId, error);
+          throw new Error(`Failed to create booking for tour: ${item.tourName}`);
+        }
       });
-    } catch (error) {
-      console.error('Error creating bookings:', error);
-      
-      return NextResponse.json(
-        { 
-          error: 'Booking creation failed. Please try again.',
-          paymentReference
-        },
-        { status: 500 }
-      );
+
+      try {
+        const createdBookings = await Promise.all(bookingPromises);
+
+        return NextResponse.json({
+          success: true,
+          bookings: createdBookings,
+          paymentReference,
+          bookingType: 'regular_tour',
+          message: 'Bookings created successfully'
+        });
+      } catch (error) {
+        console.error('Error creating bookings:', error);
+
+        return NextResponse.json(
+          {
+            error: 'Booking creation failed. Please try again.',
+            paymentReference
+          },
+          { status: 500 }
+        );
+      }
     }
 
   } catch (error) {

@@ -11,9 +11,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const session = await auth.api.getSession({
       headers: request.headers
     });
@@ -28,7 +29,7 @@ export async function POST(
     const booking = await db
       .select()
       .from(bookings)
-      .where(eq(bookings.id, params.id))
+      .where(eq(bookings.id, resolvedParams.id))
       .limit(1);
 
     if (!booking.length) {
@@ -61,11 +62,11 @@ export async function POST(
         paymentStatus: 'Refunded',
         status: 'Canceled'
       })
-      .where(eq(bookings.id, params.id));
+      .where(eq(bookings.id, resolvedParams.id));
 
     return Response.json({
       message: "Refund processed successfully",
-      bookingId: params.id
+      bookingId: resolvedParams.id
     });
   } catch (error) {
     console.error("Error processing refund:", error);

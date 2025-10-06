@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { DateDisplay } from '@/components/ui/DateDisplay';
@@ -144,6 +144,9 @@ export default function ReviewsSection({ tourId, reviews: initialReviews, avgRat
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>Share Your Experience</DialogTitle>
+                <DialogDescription className="text-sm text-gray-500">
+                  Your review will help other customers make informed decisions.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 {/* Rating Selection */}
