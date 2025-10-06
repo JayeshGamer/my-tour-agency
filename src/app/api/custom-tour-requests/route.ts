@@ -55,29 +55,37 @@ export async function GET(request: NextRequest) {
     const isAdmin = session.user.role === 'Admin';
     const status = searchParams.get('status');
 
-    let query = db
-      .select({
-        id: customTourRequests.id,
-        destination: customTourRequests.destination,
-        preferredDates: customTourRequests.preferredDates,
-        groupSize: customTourRequests.groupSize,
-        budgetRange: customTourRequests.budgetRange,
-        status: customTourRequests.status,
-        priority: customTourRequests.priority,
-        createdAt: customTourRequests.createdAt,
-        updatedAt: customTourRequests.updatedAt,
-        quotedAt: customTourRequests.quotedAt,
-        quoteDetails: customTourRequests.quoteDetails,
-        // Include user details for admin
-        user: isAdmin ? {
-          id: users.id,
-          name: users.name,
-          email: users.email,
-          firstName: users.firstName,
-          lastName: users.lastName
-        } : undefined
-      })
-      .from(customTourRequests);
+    // Build a base select mapping and only add `user` when admin to avoid
+    // passing `undefined` into the select object (which triggers internal
+    // Object.entries calls on undefined and causes the TypeError).
+    const baseSelect: any = {
+      id: customTourRequests.id,
+      destination: customTourRequests.destination,
+      preferredDates: customTourRequests.preferredDates,
+      groupSize: customTourRequests.groupSize,
+      budgetRange: customTourRequests.budgetRange,
+      status: customTourRequests.status,
+      priority: customTourRequests.priority,
+      createdAt: customTourRequests.createdAt,
+      updatedAt: customTourRequests.updatedAt,
+      quotedAt: customTourRequests.quotedAt,
+      quoteDetails: customTourRequests.quoteDetails
+    };
+
+    const selectFields = isAdmin
+      ? {
+          ...baseSelect,
+          user: {
+            id: users.id,
+            name: users.name,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName
+          }
+        }
+      : baseSelect;
+
+    let query = db.select(selectFields).from(customTourRequests);
 
     if (isAdmin) {
       query = query.leftJoin(users, eq(customTourRequests.userId, users.id));
