@@ -52,7 +52,6 @@ interface CheckoutFormProps {
   user: User;
   cartItems?: CartItem[];
   customTourData?: CustomTourData | null;
-  onSuccess?: () => void;
 }
 
 const checkoutSchema = z.object({
@@ -73,7 +72,7 @@ const formatINR = (amount: number): string => {
   }).format(amount);
 };
 
-export default function CheckoutForm({ user, cartItems, customTourData, onSuccess }: CheckoutFormProps) {
+export default function CheckoutForm({ user, cartItems, customTourData }: CheckoutFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState('');
@@ -198,12 +197,17 @@ export default function CheckoutForm({ user, cartItems, customTourData, onSucces
       if (response.ok) {
         if (customTourData) {
           toast.success('Custom tour payment completed successfully!');
-          // Redirect to bookings page to see the confirmed booking
-          window.location.href = '/bookings';
         } else {
           toast.success('Booking completed successfully!');
-          if (onSuccess) onSuccess();
         }
+        
+        // Clear cart for regular bookings
+        if (!customTourData) {
+          localStorage.removeItem('tourCart');
+        }
+        
+        // Redirect to bookings page to see the confirmed booking
+        window.location.href = '/bookings';
       } else {
         toast.error(data.error || 'Failed to complete booking');
       }

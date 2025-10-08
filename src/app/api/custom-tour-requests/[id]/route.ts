@@ -6,9 +6,9 @@ import { eq, and } from 'drizzle-orm';
 import { z } from 'zod';
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // GET - Fetch single custom tour request details
@@ -80,22 +80,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       query = query.leftJoin(users, eq(customTourRequests.userId, users.id));
     }
 
+    // Use explicit branches so Drizzle receives correctly-typed conditions.
     let tourRequest;
-    if (whereConditions.length === 1) {
-      [tourRequest] = await query.where(whereConditions[0]);
+    if (isAdmin) {
+      [tourRequest] = await query.where(eq(customTourRequests.id, requestId));
     } else {
-      [tourRequest] = await query.where(and(...whereConditions));
+      [tourRequest] = await query.where(and(eq(customTourRequests.id, requestId), eq(customTourRequests.userId, session.user.id)));
     }
 
     if (!tourRequest) {
       return NextResponse.json({ error: 'Request not found' }, { status: 404 });
     }
 
-    // Fetch communications (hide internal messages for non-admins) without
-    // passing undefined into `and`.
-    const commConditions: any[] = [eq(tourRequestCommunications.requestId, requestId)];
-    if (!isAdmin) commConditions.push(eq(tourRequestCommunications.isInternal, false));
-
+    // Build communications query and apply admin vs non-admin filters explicitly.
     let communicationsQuery = db
       .select({
         id: tourRequestCommunications.id,
@@ -114,10 +111,14 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .leftJoin(users, eq(tourRequestCommunications.senderId, users.id));
 
     let communications;
-    if (commConditions.length === 1) {
-      communications = await communicationsQuery.where(commConditions[0]).orderBy(tourRequestCommunications.createdAt);
+    if (isAdmin) {
+      communications = await communicationsQuery
+        .where(eq(tourRequestCommunications.requestId, requestId))
+        .orderBy(tourRequestCommunications.createdAt);
     } else {
-      communications = await communicationsQuery.where(and(...commConditions)).orderBy(tourRequestCommunications.createdAt);
+      communications = await communicationsQuery
+        .where(and(eq(tourRequestCommunications.requestId, requestId), eq(tourRequestCommunications.isInternal, false)))
+        .orderBy(tourRequestCommunications.createdAt);
     }
 
     // Sanitize the response data to prevent null/undefined issues with Object.entries
@@ -175,7 +176,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       adminNotes: z.string().optional(),
       quoteDetails: z.object({
         totalAmount: z.number(),
-        breakdown: z.record(z.number()),
+        // record requires key and value types in Zod v4
+        breakdown: z.record(z.string(), z.number()),
         validity: z.string(),
         currency: z.string(),
         terms: z.string().optional()
@@ -259,7 +261,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid data', details: error.errors },
+        { error: 'Invalid data', details: error.issues },
         { status: 400 }
       );
     }

@@ -40,7 +40,7 @@ interface ReviewData {
   user: {
     id: string;
     name: string | null;
-    email: string;
+    email: string | null;
     image: string | null;
   };
   tour: {
@@ -85,7 +85,7 @@ const StarRating = ({ rating }: { rating: number }) => {
   );
 };
 
-const getUserInitials = (name: string | null, email: string) => {
+const getUserInitials = (name: string | null, email: string | null) => {
   if (name && typeof name === 'string') {
     const initials = name.split(' ').filter(n => n).map(n => n[0]).join('').toUpperCase();
     return initials || (email && email.length > 0 ? email[0].toUpperCase() : 'U');
@@ -172,17 +172,17 @@ export default function ReviewsList({ reviews }: ReviewsListProps) {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={review.user.image || ""} alt={review.user.name || review.user.email} />
+                        <AvatarImage src={review.user.image || ""} alt={review.user.name || review.user.email || "User"} />
                         <AvatarFallback className="bg-primary/10 text-primary text-xs">
                           {getUserInitials(review.user.name, review.user.email)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
                         <div className="font-medium text-sm">
-                          {review.user.name || review.user.email.split('@')[0]}
+                          {review.user.name || review.user.email?.split('@')[0] || "Anonymous"}
                         </div>
                         <div className="text-xs text-gray-500 truncate">
-                          {review.user.email}
+                          {review.user.email || "No email"}
                         </div>
                       </div>
                     </div>

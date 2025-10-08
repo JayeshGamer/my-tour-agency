@@ -6,7 +6,7 @@ import ImageGallery from '@/components/tours/ImageGallery';
 import BookingSection from '@/components/tours/BookingSection';
 import ReviewsSection from '@/components/tours/ReviewsSection';
 import RelatedTours from '@/components/tours/RelatedTours';
-import { Star, MapPin, Clock, Users, IndianRupee, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Star, MapPin, Clock, Users, IndianRupee, Calendar, CheckCircle, XCircle, MessageCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/currency';
 
 interface TourDetailsPageProps {
@@ -112,225 +112,270 @@ export default async function TourDetailsPage({ params }: TourDetailsPageProps) 
   const completeItinerary = generateCompleteItinerary(tour.itinerary || [], tour.duration);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="relative">
-        <ImageGallery images={tour.images || [tour.imageUrl].filter(Boolean)} />
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Main Content Container - Efficient Desktop Grid */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="grid grid-cols-12 gap-6">
 
-        {/* Tour Header */}
-        <div className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{tour.name}</h1>
-                <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                  <div className="flex items-center">
-                    <MapPin className="w-4 h-4 mr-1" />
-                    {tour.location}
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="w-4 h-4 mr-1" />
-                    {tour.duration} days
-                  </div>
-                  <div className="flex items-center">
-                    <Users className="w-4 h-4 mr-1" />
-                    Max {tour.maxGroupSize} people
-                  </div>
-                </div>
+          {/* Left Column - Main Content (8 columns - wider for content) */}
+          <div className="col-span-8 space-y-6">
 
-                {/* Rating */}
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(avgRating)
-                            ? 'text-yellow-400 fill-current'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">
-                    {avgRating.toFixed(1)} ({totalReviews} reviews)
-                  </span>
-                </div>
+            {/* Image Gallery - Now integrated into main content */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <ImageGallery images={tour.images || [tour.imageUrl].filter(Boolean)} />
+            </div>
 
-                {/* Category and Difficulty */}
-                <div className="flex gap-2 mb-4">
-                  <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                    {tour.category}
-                  </span>
-                  <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                    tour.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                    tour.difficulty === 'Moderate' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {tour.difficulty}
-                  </span>
-                </div>
+            {/* Title and Tags Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h1 className="text-3xl font-bold text-gray-900 mb-3 leading-tight">
+                {tour.name}
+              </h1>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                <span className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 text-sm font-medium rounded-full border border-blue-200">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  {tour.category}
+                </span>
+                <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full border ${
+                  tour.difficulty === 'Easy' ? 'bg-green-50 text-green-700 border-green-200' :
+                  tour.difficulty === 'Moderate' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                  'bg-red-50 text-red-700 border-red-200'
+                }`}>
+                  {tour.difficulty}
+                </span>
+                <span className="inline-flex items-center px-3 py-1 bg-gray-50 text-gray-700 text-sm font-medium rounded-full border border-gray-200">
+                  <Users className="w-4 h-4 mr-2" />
+                  Max {tour.maxGroupSize} people
+                </span>
               </div>
 
-              {/* Price and Booking */}
-              <div className="lg:w-80">
-                <div className="bg-gray-50 rounded-lg p-6">
-                  <div className="text-center mb-4">
-                    <div className="text-3xl font-bold text-gray-900 flex items-center justify-center">
-                      <IndianRupee className="w-8 h-8" />
-                      {formatCurrency(tour.pricePerPerson || tour.price)}
-                    </div>
-                    <div className="text-sm text-gray-600">per person</div>
-                  </div>
-
-                  {tour.startDates && tour.startDates.length > 0 && (
-                    <div className="mb-4">
-                      <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        Available Dates
-                      </h3>
-                      <div className="space-y-1">
-                        {tour.startDates.slice(0, 3).map((date, index) => (
-                          <div key={index} className="text-sm text-gray-600">
-                            {new Date(date).toLocaleDateString('en-IN', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </div>
-                        ))}
-                        {tour.startDates.length > 3 && (
-                          <div className="text-sm text-gray-500">
-                            +{tour.startDates.length - 3} more dates
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <BookingSection tour={tour} />
-                </div>
+              {/* Description */}
+              <div className="prose max-w-none">
+                <p className="text-gray-700 leading-relaxed text-base">
+                  {tour.description}
+                </p>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Tour Details */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Description */}
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Tour</h2>
-              <div className="prose prose-gray max-w-none">
-                <p className="text-gray-700 leading-relaxed">{tour.description}</p>
-              </div>
-            </section>
-
-            {/* Itinerary */}
+            {/* Day by Day Itinerary */}
             {completeItinerary.length > 0 && (
-              <section>
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Day by Day Itinerary</h2>
-                <div className="space-y-4">
-                  {completeItinerary.map((day) => (
-                    <div key={day.day} className="bg-white rounded-lg border p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Day {day.day}: {day.title}
-                      </h3>
-                      <p className="text-gray-700">{day.description}</p>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center">
+                  <Calendar className="w-6 h-6 text-blue-600 mr-2" />
+                  Day by Day Itinerary
+                </h2>
+                <div className="space-y-3">
+                  {completeItinerary.map((day, index) => (
+                    <div
+                      key={day.day}
+                      className="relative pl-6 pb-6 border-l-2 border-blue-100 last:border-l-0 last:pb-0"
+                    >
+                      {/* Day number badge */}
+                      <div className="absolute -left-4 top-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md">
+                        {day.day}
+                      </div>
+
+                      <div className="bg-gradient-to-r from-gray-50 to-white rounded-lg p-4 border border-gray-200 hover:shadow-sm transition-shadow">
+                        <h3 className="font-semibold text-gray-900 mb-1">
+                          {day.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 leading-relaxed">
+                          {day.description}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </section>
+              </div>
             )}
 
-            {/* What's Included/Not Included */}
-            <section>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">What's Included</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* What's Included Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                What's Included
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+
+                {/* Included Items */}
                 {tour.included && tour.included.length > 0 && (
-                  <div className="bg-white rounded-lg border p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                      Included
-                    </h3>
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+                    <div className="flex items-center mb-3">
+                      <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-2">
+                        <CheckCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">Included</h3>
+                    </div>
                     <ul className="space-y-2">
                       {tour.included.map((item, index) => (
                         <li key={index} className="flex items-start">
                           <CheckCircle className="w-4 h-4 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-sm text-gray-700 leading-relaxed">{item}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
 
+                {/* Not Included Items */}
                 {tour.notIncluded && tour.notIncluded.length > 0 && (
-                  <div className="bg-white rounded-lg border p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <XCircle className="w-5 h-5 text-red-600 mr-2" />
-                      Not Included
-                    </h3>
+                  <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-lg p-4 border border-red-200">
+                    <div className="flex items-center mb-3">
+                      <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center mr-2">
+                        <XCircle className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">Not Included</h3>
+                    </div>
                     <ul className="space-y-2">
                       {tour.notIncluded.map((item, index) => (
                         <li key={index} className="flex items-start">
                           <XCircle className="w-4 h-4 text-red-600 mr-2 mt-0.5 flex-shrink-0" />
-                          <span className="text-gray-700">{item}</span>
+                          <span className="text-sm text-gray-700 leading-relaxed">{item}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
               </div>
-            </section>
+            </div>
 
-            {/* Reviews */}
+            {/* Reviews Section */}
             <ReviewsSection tourId={tourId} reviews={reviews} avgRating={avgRating} totalReviews={totalReviews} />
           </div>
 
-          {/* Right Column - Sidebar */}
-          <div className="space-y-6">
-            {/* Tour Highlights */}
-            <div className="bg-white rounded-lg border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Tour Highlights</h3>
-              <div className="space-y-3">
-                <div className="flex items-center">
-                  <MapPin className="w-4 h-4 text-blue-600 mr-2" />
-                  <span className="text-sm text-gray-700">{tour.location}</span>
+          {/* Right Column - Compact Booking Sidebar (4 columns - narrower) */}
+          <div className="col-span-4">
+            <div className="space-y-4 sticky top-4">
+
+              {/* Booking Card - Compact */}
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                {/* Price Header - Compact */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 text-white">
+                  <div className="text-center">
+                    <div className="text-xs font-medium mb-1 opacity-90">From</div>
+                    <div className="text-3xl font-bold flex items-center justify-center">
+                      <IndianRupee className="w-7 h-7" />
+                      {formatCurrency(tour.pricePerPerson || tour.price)}
+                    </div>
+                    <div className="text-xs mt-1 opacity-90">per person</div>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <Clock className="w-4 h-4 text-blue-600 mr-2" />
-                  <span className="text-sm text-gray-700">{tour.duration} days</span>
-                </div>
-                <div className="flex items-center">
-                  <Users className="w-4 h-4 text-blue-600 mr-2" />
-                  <span className="text-sm text-gray-700">Max {tour.maxGroupSize} people</span>
-                </div>
-                <div className="flex items-center">
-                  <Star className="w-4 h-4 text-blue-600 mr-2" />
-                  <span className="text-sm text-gray-700">{tour.difficulty} difficulty</span>
+
+                {/* Available Dates - Compact */}
+                {tour.startDates && tour.startDates.length > 0 && (
+                  <div className="p-4 border-b border-gray-200">
+                    <h3 className="text-xs font-semibold text-gray-900 mb-2 flex items-center">
+                      <Calendar className="w-4 h-4 mr-1 text-blue-600" />
+                      Available Dates
+                    </h3>
+                    <div className="space-y-1">
+                      {tour.startDates.slice(0, 2).map((date, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center text-xs text-gray-700 bg-gray-50 px-2 py-1 rounded"
+                        >
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2"></div>
+                          {new Date(date).toLocaleDateString('en-IN', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      ))}
+                      {tour.startDates.length > 2 && (
+                        <div className="text-xs text-blue-600 font-medium pl-3">
+                          +{tour.startDates.length - 2} more dates
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Booking Form - Compact */}
+                <div className="p-4">
+                  <div className="text-xs text-gray-600 mb-2">Choose date and options</div>
+                  <BookingSection tour={tour} noCard />
                 </div>
               </div>
-            </div>
 
-            {/* Need Help */}
-            <div className="bg-blue-50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Need Help?</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Have questions about this tour? Our travel experts are here to help.
-              </p>
-              <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                Contact Us
-              </button>
+              {/* Quick Info Card - Compact */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center">
+                  <Star className="w-4 h-4 text-blue-600 mr-1" />
+                  Quick Info
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-2 shadow-sm">
+                      <MapPin className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Location</div>
+                      <div className="text-sm font-semibold text-gray-900">{tour.location}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-2 shadow-sm">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Duration</div>
+                      <div className="text-sm font-semibold text-gray-900">{tour.duration} days</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-2 shadow-sm">
+                      <Users className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Group Size</div>
+                      <div className="text-sm font-semibold text-gray-900">Max {tour.maxGroupSize}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mr-2 shadow-sm">
+                      <Star className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500">Difficulty</div>
+                      <div className="text-sm font-semibold text-gray-900">{tour.difficulty}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Help Card - Compact */}
+              <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <MessageCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-900 mb-1">Need Help?</h3>
+                  <p className="text-xs text-gray-600 mb-3 leading-relaxed">
+                    Questions? Our experts are here 24/7.
+                  </p>
+                  <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-lg text-sm font-semibold hover:from-purple-700 hover:to-pink-700 transition-all shadow-md hover:shadow-lg">
+                    Contact Us
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Related Tours */}
+        {/* Related Tours Section */}
         {relatedTours.length > 0 && (
           <div className="mt-12">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  You Might Also Like
+                </h2>
+              <p className="text-gray-600">
+                  Explore similar experiences that match your interests
+                </p>
+            </div>
             <RelatedTours tours={relatedTours} />
           </div>
         )}

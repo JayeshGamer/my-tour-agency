@@ -11,14 +11,23 @@ interface RouteParams {
   };
 }
 
+const checkoutInfoSchema = z.object({
+  type: z.string().optional(),
+  amount: z.number().min(0),
+  currency: z.string().default('INR'),
+  groupSize: z.number().optional(),
+  breakdown: z.record(z.string(), z.number()).optional()
+});
+
 const messageSchema = z.object({
   message: z.string().min(1, 'Message cannot be empty'),
   isInternal: z.boolean().default(false),
-  attachments: z.array(z.string()).optional()
+  attachments: z.array(z.string()).optional(),
+  checkout: checkoutInfoSchema.optional()
 });
 
 // GET - Fetch communications for a request
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: any) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
 
@@ -26,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: requestId } = params;
+    const { id: requestId } = await context.params;
     const isAdmin = session.user.role === 'Admin';
 
     // First check if user has access to this request
@@ -44,11 +53,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Fetch communications without passing `undefined` into `and`.
-    // Use `unknown[]` instead of `any[]` to satisfy eslint rule against `any`.
-    const commConditions: unknown[] = [eq(tourRequestCommunications.requestId, requestId)];
-    if (!isAdmin) commConditions.push(eq(tourRequestCommunications.isInternal, false));
-
+    // Build the communications query. Use explicit branches for admin vs non-admin
+    // so we pass correctly-typed conditions into Drizzle's `.where` method.
     const commQuery = db
       .select({
         id: tourRequestCommunications.id,
@@ -67,10 +73,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .leftJoin(users, eq(tourRequestCommunications.senderId, users.id));
 
     let communications;
-    if (commConditions.length === 1) {
-      communications = await commQuery.where(commConditions[0]).orderBy(desc(tourRequestCommunications.createdAt));
+    if (isAdmin) {
+      // Admins can see all communications for the request
+      communications = await commQuery
+        .where(eq(tourRequestCommunications.requestId, requestId))
+        .orderBy(desc(tourRequestCommunications.createdAt));
     } else {
-      communications = await commQuery.where(and(...commConditions)).orderBy(desc(tourRequestCommunications.createdAt));
+      // Non-admins see only non-internal communications
+      communications = await commQuery
+        .where(and(eq(tourRequestCommunications.requestId, requestId), eq(tourRequestCommunications.isInternal, false)))
+        .orderBy(desc(tourRequestCommunications.createdAt));
     }
 
     return NextResponse.json({ communications });
@@ -85,7 +97,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 }
 
 // POST - Add new communication message
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(request: NextRequest, context: any) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
 
@@ -93,7 +105,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: requestId } = params;
+    const { id: requestId } = await context.params;
     const isAdmin = session.user.role === 'Admin';
     const body = await request.json();
     const validatedData = messageSchema.parse(body);
@@ -148,6 +160,45 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           senderId: session.user.id,
           senderName: session.user.name || session.user.email
         }
+      });
+    }
+
+    // If there's checkout data, handle the checkout session creation
+    if (validatedData.checkout) {
+      const { checkout } = validatedData;
+
+      // Only allow creating a checkout for this request if the caller is either
+      // an admin or the owner of the request.
+      if (!isAdmin && tourRequest.userId !== session.user.id) {
+        return NextResponse.json({ error: 'Not allowed to create checkout for this request' }, { status: 403 });
+      }
+
+      // Build the checkout payload that the frontend `/checkout` page expects.
+      // Merge values from the request and the provided checkout info.
+      const checkoutData = {
+        type: 'custom_tour',
+        requestId,
+        destination: tourRequest.destination,
+        amount: checkout.amount,
+        currency: checkout.currency || 'INR',
+        groupSize: checkout.groupSize || tourRequest.groupSize || null,
+        dates: tourRequest.preferredDates || [],
+        breakdown: checkout.breakdown || (tourRequest.quoteDetails?.breakdown || {})
+      };
+
+      // Determine origin for building absolute URL. Prefer explicit Origin header
+      // but fall back to Host header (with https) if missing.
+      const originHeader = request.headers.get('origin');
+      const hostHeader = request.headers.get('host');
+      const origin = originHeader || (hostHeader ? `https://${hostHeader}` : '');
+
+      const encoded = encodeURIComponent(JSON.stringify(checkoutData));
+      const checkoutUrl = origin ? `${origin}/checkout?data=${encoded}` : `/checkout?data=${encoded}`;
+
+      return NextResponse.json({
+        message: 'Message sent successfully',
+        communicationId: newCommunication.id,
+        checkoutUrl
       });
     }
 

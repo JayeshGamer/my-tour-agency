@@ -5,8 +5,8 @@ dotenv.config({ path: '.env.local' });
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import * as bcrypt from 'bcryptjs';
-import * as schema from '../lib/db/schema';
-import { eq } from 'drizzle-orm';
+import * as schema from '../src/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 async function fixAuthPasswords() {
   const sql = neon(process.env.DATABASE_URL!);
@@ -47,8 +47,7 @@ async function fixAuthPasswords() {
       const existingAccounts = await db
         .select()
         .from(schema.accounts)
-        .where(eq(schema.accounts.userId, user.id))
-        .where(eq(schema.accounts.providerId, 'credential'));
+        .where(and(eq(schema.accounts.userId, user.id), eq(schema.accounts.providerId, 'credential')));
       
       if (existingAccounts.length > 0) {
         // Update existing account

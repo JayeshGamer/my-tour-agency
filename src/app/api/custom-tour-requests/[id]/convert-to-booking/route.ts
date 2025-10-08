@@ -47,7 +47,7 @@ const convertToBookingSchema = z.object({
 });
 
 // POST - Convert approved custom tour request to booking
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(request: NextRequest, context: any) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
 
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id: requestId } = await params;
+    const { id: requestId } = await context.params;
     const body = await request.json();
     const validatedData = convertToBookingSchema.parse(body);
 

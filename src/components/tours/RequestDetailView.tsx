@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from '@/lib/auth-client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import Link from "next/link";
 
 interface CustomTourRequest {
   id: string;
+  userId: string; // added to fix TypeScript error when checking session ownership
   destination: string;
   preferredDates: Array<{start: string; end: string; flexible: boolean}>;
   alternativeDates?: Array<{start: string; end: string; flexible: boolean}>;
@@ -97,6 +99,7 @@ export default function RequestDetailView({ requestId }: RequestDetailViewProps)
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     fetchRequestDetails();
@@ -173,6 +176,48 @@ export default function RequestDetailView({ requestId }: RequestDetailViewProps)
     } catch (error) {
       console.error('Error approving quote:', error);
       toast.error('Failed to approve quote');
+    }
+  };
+
+  const payNow = async () => {
+    if (!request?.quoteDetails) return;
+
+    try {
+      const checkoutPayload = {
+        message: 'Proceeding to payment',
+        isInternal: false,
+        checkout: {
+          type: 'custom_tour',
+          amount: request.quoteDetails.totalAmount,
+          currency: request.quoteDetails.currency || 'INR',
+          groupSize: request.groupSize,
+          breakdown: request.quoteDetails.breakdown || {}
+        }
+      };
+
+      const resp = await fetch(`/api/custom-tour-requests/${requestId}/communications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(checkoutPayload)
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        console.error('Checkout creation failed:', err);
+        toast.error(err?.error || 'Failed to create checkout');
+        return;
+      }
+
+      const data = await resp.json();
+      if (data.checkoutUrl) {
+        // Redirect to checkout (absolute or relative URL returned by API)
+        window.location.href = data.checkoutUrl;
+      } else {
+        toast.error('Checkout URL not returned');
+      }
+    } catch (error) {
+      console.error('Error initiating checkout:', error);
+      toast.error('Failed to start payment');
     }
   };
 
@@ -271,11 +316,18 @@ export default function RequestDetailView({ requestId }: RequestDetailViewProps)
             </div>
 
             {request.status === 'quoted' && (
-              <div className="mt-6 pt-6 border-t border-green-200">
+              <div className="mt-6 pt-6 border-t border-green-200 flex gap-3">
                 <Button onClick={approveQuote} className="bg-green-600 hover:bg-green-700">
                   <CheckCircle className="h-4 w-4 mr-2" />
                   Approve Quote
                 </Button>
+                {/* Show Pay Now button to request owner (or admins) when quote exists */}
+                {session?.user && (session.user.id === request.userId) && (
+                  <Button onClick={payNow} className="bg-emerald-600 hover:bg-emerald-700">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Pay Now
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>

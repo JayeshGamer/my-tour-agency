@@ -1,6 +1,13 @@
 "use client";
 
+import {
+  MapPin, Calendar, Users, DollarSign, Clock, MessageCircle,
+  Eye, Loader2, PlusCircle, FileText, Send, Star, Filter
+} from "lucide-react";
+import toast from "react-hot-toast";
+import { format } from "date-fns";
 import { useState, useEffect, useCallback } from "react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +18,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  MapPin, Calendar, Users, DollarSign, Clock, MessageCircle,
-  Eye, Loader2, PlusCircle, FileText, Send, Star, Filter
-} from "lucide-react";
-import { format } from "date-fns";
-import toast from "react-hot-toast";
 
 interface CustomTourRequest {
   id: string;
@@ -97,6 +98,8 @@ export default function AdminCustomTourRequests() {
     terms: '',
     adminNotes: ''
   });
+
+  const [convertLoading, setConvertLoading] = useState<string | null>(null);
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -212,6 +215,54 @@ export default function AdminCustomTourRequests() {
   const openDetailsDialog = (request: CustomTourRequest) => {
     setSelectedRequest(request);
     setShowDetailsDialog(true);
+  };
+
+  const convertToBooking = async (request: CustomTourRequest) => {
+    try {
+      setConvertLoading(request.id);
+
+      // Use the first preferred date as the start date if available
+      const startDate = request.preferredDates && request.preferredDates.length > 0
+        ? request.preferredDates[0].start
+        : new Date().toISOString();
+
+      const travelerInfo = {
+        firstName: request.user.firstName || request.user.name?.split(' ')[0] || 'Guest',
+        lastName: request.user.lastName || (request.user.name ? request.user.name.split(' ').slice(1).join(' ') : ''),
+        email: request.user.email,
+        phone: (request as any).phone || ''
+      };
+
+      const body = {
+        startDate,
+        travelerInfo,
+        paymentMethod: 'none'
+      };
+
+      const res = await fetch(`/api/custom-tour-requests/${request.id}/convert-to-booking`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error('Convert to booking failed:', err);
+        toast.error((err && (err.error || err.message)) || 'Failed to convert request to booking');
+        return;
+      }
+
+      const data = await res.json();
+      toast.success(data?.message || 'Request converted to booking');
+
+      // Refresh list
+      await fetchRequests();
+    } catch (error) {
+      console.error('Error converting to booking:', error);
+      toast.error('Failed to convert request to booking');
+    } finally {
+      setConvertLoading(null);
+    }
   };
 
   if (loading) {
@@ -458,8 +509,9 @@ export default function AdminCustomTourRequests() {
                     {request.status === 'approved' && (
                       <Button
                         size="sm"
-                        onClick={() => toast.success('Convert to booking feature coming soon')}
+                        onClick={() => convertToBooking(request)}
                         className="bg-green-600 hover:bg-green-700"
+                        isLoading={convertLoading === request.id}
                       >
                         Convert to Booking
                       </Button>

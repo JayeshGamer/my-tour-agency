@@ -26,6 +26,8 @@ import { signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
+// Theme toggling removed per request: no-op; button removed from UI.
+
 interface AdminNavigationProps {
   user: {
     name?: string | null;
@@ -165,14 +167,18 @@ export default function AdminNavigation({ user }: AdminNavigationProps) {
             </div>
           )}
         </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="ml-auto"
-        >
-          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
+        <div className="flex items-center space-x-2">
+          {/* Theme toggler removed - light theme only */}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="ml-auto"
+          >
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
 
       {/* Navigation */}

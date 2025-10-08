@@ -18,17 +18,17 @@ import Link from "next/link";
 
 async function getPaymentsData() {
   try {
-    // Get bookings with payment intent IDs as proxy for payments
+    // Get bookings as proxy for payments
     const bookingsData = await db
       .select({
         id: bookings.id,
-        paymentIntentId: bookings.paymentIntentId,
         totalPrice: bookings.totalPrice,
         status: bookings.status,
+        paymentStatus: bookings.paymentStatus,
         createdAt: bookings.createdAt,
         userName: users.name,
         userEmail: users.email,
-        tourTitle: tours.title
+        tourTitle: tours.name
       })
       .from(bookings)
       .leftJoin(users, eq(bookings.userId, users.id))
@@ -42,7 +42,7 @@ async function getPaymentsData() {
       if (!booking) return null;
       
       return {
-        id: booking.paymentIntentId || booking.id,
+        id: booking.id,
         amount: parseFloat((booking.totalPrice || '0').toString()) * 100, // Convert to cents
         status: booking.status === 'Confirmed' ? 'succeeded' : 
                booking.status === 'Pending' ? 'pending' : 'canceled',

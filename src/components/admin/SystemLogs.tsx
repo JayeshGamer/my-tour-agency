@@ -10,7 +10,7 @@ interface SystemLog {
   id: string;
   type: string;
   message: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, any> | null;
   userId?: string | null;
   createdAt: Date;
 }

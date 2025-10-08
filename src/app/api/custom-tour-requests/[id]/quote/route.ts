@@ -5,12 +5,6 @@ import { auth } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
-}
-
 const quoteSchema = z.object({
   totalAmount: z.number().min(0, 'Total amount must be positive'),
   breakdown: z.record(z.number()),
@@ -21,7 +15,7 @@ const quoteSchema = z.object({
 });
 
 // POST - Create or update quote for custom tour request
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(request: NextRequest, context: any) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
 
@@ -29,7 +23,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id: requestId } = await params;
+    const { id: requestId } = await context.params;
     const body = await request.json();
 
     // Basic validation
@@ -108,7 +102,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 }
 
 // PATCH - Update existing quote
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(request: NextRequest, context: any) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
 
@@ -116,7 +110,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
     }
 
-    const { id: requestId } = await params;
+    const { id: requestId } = await context.params;
     const body = await request.json();
     const validatedData = quoteSchema.parse(body);
 
@@ -196,7 +190,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 }
 
 // GET - Retrieve quote for a custom tour request
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: any) {
   try {
     const session = await auth.api.getSession({ headers: request.headers });
 
@@ -204,7 +198,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    const { id: requestId } = await params;
+    const { id: requestId } = await context.params;
 
     // TODO: Implement actual database query when schema is confirmed
     return NextResponse.json({

@@ -29,23 +29,27 @@ import { useRouter } from "next/navigation";
 interface CouponData {
   id: string;
   code: string;
-  type: "percentage" | "fixed";
-  value: number;
-  isActive: boolean;
-  usageCount: number;
-  usageLimit: number | null;
+  name: string;
+  description?: string | null;
+  discountType: string;
+  discountValue: string;
+  minimumAmount?: string | null;
+  maximumDiscount?: string | null;
+  usageLimit?: number | null;
+  usedCount?: number;
   validFrom: Date;
-  validUntil: Date | null;
-  minOrderAmount: number | null;
-  maxDiscountAmount: number | null;
+  validUntil?: Date | null;
+  isActive: boolean;
   createdAt: Date;
+  updatedAt: Date;
+  [key: string]: any;
 }
 
 interface CouponsListProps {
   coupons: CouponData[];
 }
 
-const getStatusBadge = (isActive: boolean, validUntil: Date | null) => {
+const getStatusBadge = (isActive: boolean, validUntil: Date | null | undefined) => {
   const now = new Date();
   
   if (!isActive) {
@@ -137,7 +141,7 @@ export default function CouponsList({ coupons }: CouponsListProps) {
                 <div className="flex items-center gap-4">
                   {/* Coupon Icon */}
                   <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                    {coupon.type === "percentage" ? (
+                    {coupon.discountType === "percentage" ? (
                       <Percent className="h-6 w-6 text-primary" />
                     ) : (
                       <DollarSign className="h-6 w-6 text-primary" />
@@ -153,18 +157,18 @@ export default function CouponsList({ coupons }: CouponsListProps) {
                     
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
-                        {coupon.type === "percentage" ? (
+                        {coupon.discountType === "percentage" ? (
                           <Percent className="h-3 w-3" />
                         ) : (
                           <DollarSign className="h-3 w-3" />
                         )}
-                        <span>{getDiscountDisplay(coupon.type, coupon.value)}</span>
+                        <span>{getDiscountDisplay(coupon.discountType, Number(coupon.discountValue))}</span>
                       </div>
                       
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
                         <span>
-                          {coupon.usageCount} / {coupon.usageLimit || '∞'} uses
+                          {coupon.usedCount} / {coupon.usageLimit || '∞'} uses
                         </span>
                       </div>
                       
@@ -185,11 +189,11 @@ export default function CouponsList({ coupons }: CouponsListProps) {
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs text-gray-500">Usage</span>
                           <span className="text-xs text-gray-500">
-                            {Math.round(getUsagePercentage(coupon.usageCount, coupon.usageLimit))}%
+                            {Math.round(getUsagePercentage(coupon.usedCount, coupon.usageLimit))}%
                           </span>
                         </div>
                         <Progress 
-                          value={getUsagePercentage(coupon.usageCount, coupon.usageLimit)} 
+                          value={getUsagePercentage(coupon.usedCount, coupon.usageLimit)}
                           className="h-2"
                         />
                       </div>

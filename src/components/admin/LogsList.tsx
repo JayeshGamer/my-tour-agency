@@ -35,10 +35,10 @@ interface LogEntry {
   category: string;
   message: string;
   userId?: string;
-  userEmail?: string;
-  ipAddress?: string;
+  userEmail?: string | any;
+  ipAddress?: string | any;
   userAgent?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, any> | null;
   createdAt: Date;
 }
 

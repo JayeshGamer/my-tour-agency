@@ -94,54 +94,82 @@ export default function MyRequestsList() {
   const [requests, setRequests] = useState<CustomTourRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
-  
+
+  // keep tab badge counts in sync with the DB
+  const [counts, setCounts] = useState<Record<string, number>>({
+    all: 0,
+    submitted: 0,
+    under_review: 0,
+    quoted: 0,
+    approved: 0
+  });
+
   // Clear any potentially bad cached data on component mount
+  useEffect(() => setRequests([]), []);
+
+  // Fetch counts initially and fetch requests whenever filter changes
   useEffect(() => {
-    setRequests([]); // Clear any existing state
+    fetchCounts();
   }, []);
 
   useEffect(() => {
-    fetchRequests();
-  }, []);
+    fetchRequests(filter);
+  }, [filter]);
 
-  const fetchRequests = async () => {
+  // Fetch requests optionally filtered by status (calling backend)
+  const fetchRequests = async (status: string = 'all') => {
     try {
       setLoading(true);
-      const response = await fetch('/api/custom-tour-requests');
-      if (!response.ok) throw new Error('Failed to fetch requests');
+      const url = status === 'all' ? '/api/custom-tour-requests' : `/api/custom-tour-requests?status=${encodeURIComponent(status)}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch requests');
+      const data = await res.json();
 
-      const data = await response.json();
-      
-      // Additional sanitization on the frontend to ensure safety
-      const safeFequests = (data.requests || []).map((request: any) => ({
-        ...request,
-        quoteDetails: request.quoteDetails ? {
-          ...request.quoteDetails,
-          breakdown: request.quoteDetails.breakdown || {}
-        } : null
+      const safeRequests = (data.requests || []).map((r: any) => ({
+        ...r,
+        quoteDetails: r.quoteDetails ? { ...r.quoteDetails, breakdown: r.quoteDetails.breakdown || {} } : null
       }));
-      
-      setRequests(safeFequests);
-    } catch (error) {
-      console.error('Error fetching requests:', error);
+
+      setRequests(safeRequests);
+
+      // refresh counts so badges reflect the latest DB state
+      fetchCounts();
+    } catch (err) {
+      console.error('Error fetching requests:', err);
       toast.error('Failed to load your requests');
     } finally {
       setLoading(false);
     }
   };
 
-  // Auto-refresh data every 30 seconds to catch new quotes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchRequests();
-    }, 30000);
+  // Fetch counts used for the tab badges (keeps badges accurate)
+  const fetchCounts = async () => {
+    try {
+      const res = await fetch('/api/custom-tour-requests');
+      if (!res.ok) return;
+      const data = await res.json();
+      const all = (data.requests || []);
+      setCounts({
+        all: all.length,
+        submitted: all.filter((r: any) => r.status === 'submitted').length,
+        under_review: all.filter((r: any) => r.status === 'under_review').length,
+        quoted: all.filter((r: any) => r.status === 'quoted').length,
+        approved: all.filter((r: any) => r.status === 'approved').length
+      });
+    } catch (err) {
+      console.error('Failed to fetch counts', err);
+    }
+  };
 
+  // Auto-refresh data every 30 seconds (keeps current filter)
+  useEffect(() => {
+    const interval = setInterval(() => fetchRequests(filter), 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [filter]);
 
   // Add manual refresh function
   const handleRefresh = () => {
-    fetchRequests();
+    fetchRequests(filter);
     toast.success('Refreshed successfully!');
   };
 
@@ -184,11 +212,11 @@ export default function MyRequestsList() {
       {/* Filter Tabs */}
       <div className="flex flex-wrap gap-2 bg-white p-4 rounded-lg shadow-sm">
         {[
-          { key: 'all', label: 'All Requests', count: requests.length },
-          { key: 'submitted', label: 'Submitted', count: requests.filter(r => r.status === 'submitted').length },
-          { key: 'under_review', label: 'Under Review', count: requests.filter(r => r.status === 'under_review').length },
-          { key: 'quoted', label: 'Quoted', count: requests.filter(r => r.status === 'quoted').length },
-          { key: 'approved', label: 'Approved', count: requests.filter(r => r.status === 'approved').length }
+          { key: 'all', label: 'All Requests', count: counts.all ?? 0 },
+          { key: 'submitted', label: 'Submitted', count: counts.submitted ?? 0 },
+          { key: 'under_review', label: 'Under Review', count: counts.under_review ?? 0 },
+          { key: 'quoted', label: 'Quoted', count: counts.quoted ?? 0 },
+          { key: 'approved', label: 'Approved', count: counts.approved ?? 0 }
         ].map((tab) => (
           <Button
             key={tab.key}
@@ -370,6 +398,17 @@ export default function MyRequestsList() {
                   </div>
 
                   <div className="flex gap-2">
+                    {/* If a quote is ready, allow the user to accept & pay */}
+                    {request.status === 'quoted' && request.quoteDetails && (
+                      <Button
+                        onClick={() => handlePayment(request)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Accept & Pay
+                      </Button>
+                    )}
+
                     {request.status === 'approved' && request.quoteDetails && (
                       <Button
                         onClick={() => handlePayment(request)}

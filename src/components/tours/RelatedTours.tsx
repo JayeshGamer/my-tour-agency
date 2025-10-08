@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+// Using standard <img> for desktop-only fixed images (no next/image srcset/fill)
 import { MapPin, Clock, Users, IndianRupee, ArrowRight, Star } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,8 @@ export default function RelatedTours({ tours }: RelatedToursProps) {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Desktop-only 3-column grid */}
+      <div className="grid grid-cols-3 gap-6">
         {tours.map((tour) => (
           <Card key={tour.id} className="group hover:shadow-lg transition-shadow overflow-hidden">
             <CardHeader className="p-0">
@@ -58,12 +59,7 @@ export default function RelatedTours({ tours }: RelatedToursProps) {
                       <span className="text-white text-lg font-semibold">{tour.name}</span>
                     </div>
                   ) : (
-                    <Image
-                      src={tour.imageUrl}
-                      alt={tour.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    <img src={tour.imageUrl} alt={tour.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   )
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">

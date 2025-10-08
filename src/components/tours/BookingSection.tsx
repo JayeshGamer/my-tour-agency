@@ -25,6 +25,7 @@ interface Tour {
 
 interface BookingSectionProps {
   tour: Tour;
+  noCard?: boolean; // when true, render content without outer Card wrapper
 }
 
 interface BookingExtras {
@@ -39,7 +40,7 @@ const EXTRAS_PRICING = {
   mealPlan: { name: 'Full Meal Plan', price: 15000 },
 };
 
-export default function BookingSection({ tour }: BookingSectionProps) {
+export default function BookingSection({ tour, noCard = false }: BookingSectionProps) {
   const router = useRouter();
   const { data: session } = useSession();
   const [numberOfPeople, setNumberOfPeople] = useState(1);
@@ -148,6 +149,197 @@ export default function BookingSection({ tour }: BookingSectionProps) {
 
   const availableDates = tour.startDates as string[];
 
+  // header JSX and content JSX so we can optionally render without Card wrapper
+  const headerJSX = (
+    <>
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Book Your Adventure</h3>
+          <p className="text-sm text-gray-500">Select your preferred date and customize your tour experience</p>
+        </div>
+      </div>
+    </>
+  );
+
+  const contentJSX = (
+    <div className="space-y-4">
+      {/* Number of People */}
+      <div>
+        <Label htmlFor="people" className="flex items-center gap-1 mb-2 text-xs">
+          <Users className="w-4 h-4" />
+          Number of People
+        </Label>
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => handleNumberChange(false)}
+            disabled={numberOfPeople <= 1}
+            className="h-8 w-8"
+          >
+            <Minus className="w-4 h-4" />
+          </Button>
+          <Input
+            id="people"
+            type="number"
+            value={numberOfPeople}
+            onChange={(e) => {
+              const value = parseInt(e.target.value);
+              if (value >= 1 && value <= tour.maxGroupSize) {
+                setNumberOfPeople(value);
+              }
+            }}
+            className="w-16 text-center text-sm h-8"
+            min="1"
+            max={tour.maxGroupSize}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => handleNumberChange(true)}
+            disabled={numberOfPeople >= tour.maxGroupSize}
+            className="h-8 w-8"
+          >
+            <Plus className="w-4 h-4" />
+          </Button>
+          <span className="text-xs text-gray-500 whitespace-nowrap">
+            Max: {tour.maxGroupSize}
+          </span>
+        </div>
+      </div>
+
+      {/* Select Date */}
+      <div>
+        <Label htmlFor="date" className="flex items-center gap-1 mb-2 text-xs">
+          <Calendar className="w-4 h-4" />
+          Select Tour Date
+        </Label>
+        <DatePicker
+          date={selectedDate}
+          onDateChange={setSelectedDate}
+          availableDates={availableDates}
+          placeholder="Choose date"
+        />
+      </div>
+
+      {/* Extra Options */}
+      <div>
+        <Label className="flex items-center gap-1 mb-2 text-xs">
+          <Info className="w-4 h-4" />
+          Optional Extras
+        </Label>
+        <div className="space-y-2">
+          {Object.entries(EXTRAS_PRICING).map(([key, extra]) => (
+            <div key={key} className="flex items-center justify-between gap-2">
+              <div className="flex items-center space-x-1.5">
+                <Checkbox
+                  id={key}
+                  checked={extras[key as keyof BookingExtras]}
+                  onCheckedChange={(checked) =>
+                    setExtras(prev => ({ ...prev, [key]: checked }))
+                  }
+                  className="h-3.5 w-3.5"
+                />
+                <label
+                  htmlFor={key}
+                  className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {extra.name}
+                </label>
+              </div>
+              <span className="text-xs text-gray-600 whitespace-nowrap">
+                +{formatCurrency(extra.price)}/person
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Summary */}
+      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+        <h3 className="font-semibold text-sm">Price Summary</h3>
+
+        {/* Base Price */}
+        <div className="flex justify-between text-xs">
+          <span>Base Price ({numberOfPeople} {numberOfPeople === 1 ? 'person' : 'people'})</span>
+          <span>{formatCurrency(parseFloat(tour.pricePerPerson) * numberOfPeople)}</span>
+        </div>
+
+        {/* Extras */}
+        {extras.guidedTour && (
+          <div className="flex justify-between text-xs">
+            <span>Professional Guide</span>
+            <span>+{formatCurrency(EXTRAS_PRICING.guidedTour.price * numberOfPeople)}</span>
+          </div>
+        )}
+        {extras.insurance && (
+          <div className="flex justify-between text-xs">
+            <span>Travel Insurance</span>
+            <span>+{formatCurrency(EXTRAS_PRICING.insurance.price * numberOfPeople)}</span>
+          </div>
+        )}
+        {extras.mealPlan && (
+          <div className="flex justify-between text-xs">
+            <span>Full Meal Plan</span>
+            <span>+{formatCurrency(EXTRAS_PRICING.mealPlan.price * numberOfPeople)}</span>
+          </div>
+        )}
+
+        <div className="border-t pt-2">
+          <div className="flex justify-between font-semibold text-sm">
+            <span>Total Price</span>
+            <span className="text-green-600">{formatCurrency(totalPrice)}</span>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            Price per person: {formatCurrency(totalPrice / numberOfPeople)}
+          </p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="space-y-2">
+        <Button
+          onClick={handleBookNow}
+          className="w-full"
+          size="default"
+          disabled={!selectedDate || isLoading}
+        >
+          <CreditCard className="w-4 h-4 mr-2" />
+          {isLoading ? 'Processing...' : 'Book Now'}
+        </Button>
+        <Button
+          onClick={handleAddToCart}
+          variant="outline"
+          className="w-full"
+          size="default"
+          disabled={!selectedDate}
+        >
+          <ShoppingCart className="w-4 h-4 mr-2" />
+          Add to Cart
+        </Button>
+      </div>
+
+      {/* Additional Information */}
+      <div className="text-xs text-gray-500 space-y-0.5">
+        <p>• Free cancellation up to 24 hours before start</p>
+        <p>• Instant confirmation upon booking</p>
+        <p>• Secure payment processing</p>
+      </div>
+    </div>
+  );
+
+  // Render depending on `noCard` flag
+  if (noCard) {
+    return (
+      <div className="w-full">
+        {headerJSX}
+        <div className="mt-4">{contentJSX}</div>
+      </div>
+    );
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -156,176 +348,7 @@ export default function BookingSection({ tour }: BookingSectionProps) {
           Select your preferred date and customize your tour experience
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Column - Booking Options */}
-          <div className="space-y-4">
-            {/* Number of People */}
-            <div>
-              <Label htmlFor="people" className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4" />
-                Number of People
-              </Label>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleNumberChange(false)}
-                  disabled={numberOfPeople <= 1}
-                >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <Input
-                  id="people"
-                  type="number"
-                  value={numberOfPeople}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (value >= 1 && value <= tour.maxGroupSize) {
-                      setNumberOfPeople(value);
-                    }
-                  }}
-                  className="w-20 text-center"
-                  min="1"
-                  max={tour.maxGroupSize}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleNumberChange(true)}
-                  disabled={numberOfPeople >= tour.maxGroupSize}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-                <span className="text-sm text-gray-500">
-                  Max: {tour.maxGroupSize} people
-                </span>
-              </div>
-            </div>
-
-            {/* Select Date */}
-            <div>
-              <Label htmlFor="date" className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4" />
-                Select Tour Date
-              </Label>
-              <DatePicker
-                date={selectedDate}
-                onDateChange={setSelectedDate}
-                availableDates={availableDates}
-                placeholder="Choose a tour date"
-              />
-            </div>
-
-            {/* Extra Options */}
-            <div>
-              <Label className="flex items-center gap-2 mb-3">
-                <Info className="w-4 h-4" />
-                Optional Extras
-              </Label>
-              <div className="space-y-3">
-                {Object.entries(EXTRAS_PRICING).map(([key, extra]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={key}
-                        checked={extras[key as keyof BookingExtras]}
-                        onCheckedChange={(checked) =>
-                          setExtras(prev => ({ ...prev, [key]: checked }))
-                        }
-                      />
-                      <label
-                        htmlFor={key}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                      >
-                        {extra.name}
-                      </label>
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      +{formatCurrency(extra.price)}/person
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Price Summary */}
-          <div className="space-y-4">
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <h3 className="font-semibold text-lg">Price Summary</h3>
-              
-              {/* Base Price */}
-              <div className="flex justify-between text-sm">
-                <span>Base Price ({numberOfPeople} {numberOfPeople === 1 ? 'person' : 'people'})</span>
-                <span>{formatCurrency(parseFloat(tour.pricePerPerson) * numberOfPeople)}</span>
-              </div>
-
-              {/* Extras */}
-              {extras.guidedTour && (
-                <div className="flex justify-between text-sm">
-                  <span>Professional Guide</span>
-                  <span>+{formatCurrency(EXTRAS_PRICING.guidedTour.price * numberOfPeople)}</span>
-                </div>
-              )}
-              {extras.insurance && (
-                <div className="flex justify-between text-sm">
-                  <span>Travel Insurance</span>
-                  <span>+{formatCurrency(EXTRAS_PRICING.insurance.price * numberOfPeople)}</span>
-                </div>
-              )}
-              {extras.mealPlan && (
-                <div className="flex justify-between text-sm">
-                  <span>Full Meal Plan</span>
-                  <span>+{formatCurrency(EXTRAS_PRICING.mealPlan.price * numberOfPeople)}</span>
-                </div>
-              )}
-
-              <div className="border-t pt-3">
-                <div className="flex justify-between font-semibold text-lg">
-                  <span>Total Price</span>
-                  <span className="text-green-600">{formatCurrency(totalPrice)}</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Price per person: {formatCurrency(totalPrice / numberOfPeople)}
-                </p>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-2">
-              <Button
-                onClick={handleBookNow}
-                className="w-full"
-                size="lg"
-                disabled={!selectedDate || isLoading}
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                {isLoading ? 'Processing...' : 'Book Now'}
-              </Button>
-              <Button
-                onClick={handleAddToCart}
-                variant="outline"
-                className="w-full"
-                size="lg"
-                disabled={!selectedDate}
-              >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Add to Cart
-              </Button>
-            </div>
-
-            {/* Additional Information */}
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>• Free cancellation up to 24 hours before start</p>
-              <p>• Instant confirmation upon booking</p>
-              <p>• Secure payment processing</p>
-            </div>
-          </div>
-        </div>
-      </CardContent>
+      <CardContent className="space-y-6">{contentJSX}</CardContent>
     </Card>
   );
 }

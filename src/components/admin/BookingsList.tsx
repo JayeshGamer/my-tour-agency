@@ -39,17 +39,21 @@ interface Booking {
     status: string;
     bookingDate: Date;
     startDate: Date;
-    paymentIntentId: string | null;
+    paymentIntentId?: string | null;
+    paymentStatus?: string;
+    [key: string]: any;
   };
   tour: {
     id: string;
     name: string;
     location: string;
+    [key: string]: any;
   };
   user: {
     id: string;
     email: string;
     name: string | null;
+    [key: string]: any;
   };
 }
 

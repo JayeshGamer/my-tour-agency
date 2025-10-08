@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { bookings, adminLogs } from '@/lib/db/schema';
+import { bookings } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { headers } from 'next/headers';
@@ -61,15 +61,25 @@ export async function PATCH(
       })
       .where(eq(bookings.id, bookingId));
 
-    // Log the cancellation (only if adminLogs table exists)
+    // Log the cancellation into system logs (user action) to match schema
     try {
-      await db.insert(adminLogs).values({
-        id: crypto.randomUUID(),
+      // Read IP from headers (x-forwarded-for) or fall back to unknown
+      const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+      const userAgent = request.headers.get('user-agent') || 'unknown';
+
+      // Use systemLogs for user actions; adminLogs is reserved for admin operations
+      const { systemLogs } = await import('@/lib/db/schema');
+
+      await db.insert(systemLogs).values({
+        type: 'booking',
+        message: `Booking ${bookingId} cancelled by user ${session.user.id}`,
+        metadata: {
+          bookingId,
+          userId: session.user.id,
+          ip,
+          userAgent,
+        },
         userId: session.user.id,
-        action: 'BOOKING_CANCELLED',
-        details: `User cancelled booking ${bookingId}`,
-        ipAddress: request.ip || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
         createdAt: new Date(),
       });
     } catch (logError) {
