@@ -79,17 +79,18 @@ export default function EarningsChart({ earningsData }: EarningsChartProps) {
     }
   }, [timeRange, earningsData]);
 
-  const formatYAxisTick = (value: number) => {
+  const formatYAxis = (value: number) => {
     if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}K`;
+      return `₹${(value / 1000000).toFixed(1)}M`;
     }
-    return `$${value}`;
+    if (value >= 1000) {
+      return `₹${(value / 1000).toFixed(0)}K`;
+    }
+    return `₹${value}`;
   };
 
   const formatTooltipValue = (value: number) => {
-    return `$${value.toLocaleString()}`;
+    return `₹${value.toLocaleString('en-IN')}`;
   };
 
   return (
@@ -116,6 +117,12 @@ export default function EarningsChart({ earningsData }: EarningsChartProps) {
               data={chartData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
+              <defs>
+                <linearGradient id="colorEarningsGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
               <XAxis 
                 dataKey="name" 
@@ -125,7 +132,7 @@ export default function EarningsChart({ earningsData }: EarningsChartProps) {
               <YAxis 
                 className="text-xs"
                 tick={{ fill: '#6b7280' }}
-                tickFormatter={formatYAxisTick}
+                tickFormatter={formatYAxis}
               />
               <Tooltip 
                 contentStyle={{ 
@@ -139,10 +146,10 @@ export default function EarningsChart({ earningsData }: EarningsChartProps) {
               <Area
                 type="monotone"
                 dataKey="earnings"
-                stroke="#3b82f6"
-                fill="#3b82f6"
-                fillOpacity={0.1}
-                strokeWidth={2}
+                stroke="#06b6d4"
+                fill="url(#colorEarningsGradient)"
+                fillOpacity={1}
+                strokeWidth={3}
               />
             </AreaChart>
           </ResponsiveContainer>

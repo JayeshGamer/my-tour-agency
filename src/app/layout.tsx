@@ -3,7 +3,6 @@ import "./globals.css";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { Toaster } from "react-hot-toast";
-import HydrationSafe from "@/components/ui/HydrationSafe";
 
 export const metadata: Metadata = {
   title: "Travel Agency",
@@ -42,14 +41,12 @@ export default function RootLayout({
         }} />
       </head>
       <body className="min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
-        <HydrationSafe>
-          <Header />
-          <main className="min-h-screen pt-20">
-            {children}
-          </main>
-          <Footer />
-          <Toaster position="top-right" />
-        </HydrationSafe>
+        <Header />
+        <main className="min-h-screen pt-20">
+          {children}
+        </main>
+        <Footer />
+        <Toaster position="top-right" />
       </body>
     </html>
   );

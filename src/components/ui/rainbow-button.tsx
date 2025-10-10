@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 interface RainbowButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean;
-  variant?: "white" | "black";
+  variant?: "white" | "black" | "green" | "red" ;
 }
 
 export function RainbowButton({
@@ -30,6 +30,13 @@ export function RainbowButton({
 
         // Black variant
         variant === "black" && "text-white bg-[linear-gradient(#000,#000),linear-gradient(#000_50%,rgba(0,0,0,0.6)_80%,rgba(0,0,0,0)),linear-gradient(90deg,hsl(var(--color-1)),hsl(var(--color-5)),hsl(var(--color-3)),hsl(var(--color-4)),hsl(var(--color-2)))]",
+
+        // Green variant
+        variant === "green" && "text-white bg-[linear-gradient(#10b981,#10b981),linear-gradient(#10b981_50%,rgba(16,185,129,0.6)_80%,rgba(16,185,129,0)),linear-gradient(90deg,hsl(var(--color-1)),hsl(var(--color-5)),hsl(var(--color-3)),hsl(var(--color-4)),hsl(var(--color-2)))]",
+
+        // Red variant
+
+        variant === "red" && "text-white bg-[linear-gradient(#ef4444,#ef4444),linear-gradient(#ef4444_50%,rgba(239,68,68,0.6)_80%,rgba(239,68,68,0)),linear-gradient(90deg,hsl(var(--color-1)),hsl(var(--color-5)),hsl(var(--color-3)),hsl(var(--color-4)),hsl(var(--color-2)))]",
 
         className,
       )}

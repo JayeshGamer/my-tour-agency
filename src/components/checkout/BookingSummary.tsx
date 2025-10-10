@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, MapPin, Tag } from 'lucide-react';
+import { Calendar, Users, Tag, Receipt } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface CartItem {
@@ -61,117 +61,102 @@ export default function BookingSummary({
   total 
 }: BookingSummaryProps) {
   
-  // Handle custom tour data or regular cart items
   const isCustomTour = !!customTourData;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {isCustomTour ? 'Custom Tour Summary' : 'Booking Summary'}
+    <Card className="border-2 border-gray-200 dark:border-gray-800">
+      <CardHeader className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Receipt className="h-5 w-5 text-gray-900 dark:text-white" />
+          {isCustomTour ? 'Custom Tour Summary' : 'Order Summary'}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-6">
         {/* Custom Tour Details */}
         {isCustomTour && customTourData && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <h3 className="font-semibold text-lg">{customTourData.destination}</h3>
-              <p className="text-sm text-gray-500">Custom Tour Request</p>
+              <h3 className="font-bold text-base text-gray-900 dark:text-white">
+                {customTourData.destination}
+              </h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Custom Tour Package</p>
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <Calendar className="w-4 h-4 text-gray-400" />
                 <span>
                   {format(new Date(customTourData.dates[0].start), 'dd MMM')} – {' '}
                   {format(new Date(customTourData.dates[0].end), 'dd MMM yyyy')}
-                  {customTourData.dates[0].flexible && (
-                    <Badge variant="outline" className="ml-2 text-xs">Flexible</Badge>
-                  )}
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="w-4 h-4 text-gray-400" />
-                <span>Custom Itinerary</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                 <Users className="w-4 h-4 text-gray-400" />
                 <span>
-                  {customTourData.groupSize} Traveler{customTourData.groupSize !== 1 ? 's' : ''}
+                  {customTourData.groupSize} {customTourData.groupSize === 1 ? 'Traveler' : 'Travelers'}
                 </span>
               </div>
             </div>
 
             {/* Custom Tour Breakdown */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Cost Breakdown:</p>
-              <div className="space-y-1">
-                {Object.entries(customTourData.breakdown || {}).map(([item, amount]) => (
-                  <div key={item} className="flex justify-between text-sm">
-                    <span>{item}:</span>
-                    <span>{formatINR(amount)}</span>
-                  </div>
-                ))}
+            {Object.keys(customTourData.breakdown || {}).length > 0 && (
+              <div className="space-y-2 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Package Includes:</p>
+                <div className="space-y-1.5">
+                  {Object.entries(customTourData.breakdown || {}).map(([item, amount]) => (
+                    <div key={item} className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
+                      <span>• {item}</span>
+                      <span className="font-medium">{formatINR(amount)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
         {/* Regular Tour Details */}
-        {!isCustomTour && cartItems && (
-          <div className="space-y-3">
-            <div>
-              <h3 className="font-semibold text-lg">{cartItems[0]?.tourName}</h3>
-              {cartItems.length > 1 && (
-                <p className="text-sm text-gray-500">
-                  + {cartItems.length - 1} more tour{cartItems.length > 2 ? 's' : ''}
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span>
-                  {format(new Date(cartItems[0]?.date || new Date()), 'dd MMM')} – {' '}
-                  {format(new Date(new Date(cartItems[0]?.date || new Date()).getTime() + 6 * 24 * 60 * 60 * 1000), 'dd MMM yyyy')}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <MapPin className="w-4 h-4 text-gray-400" />
-                <span>Guided Group Tour</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <Users className="w-4 h-4 text-gray-400" />
-                <span>
-                  {cartItems.reduce((sum, item) => sum + item.numberOfPeople, 0)} Traveler
-                  {cartItems.reduce((sum, item) => sum + item.numberOfPeople, 0) !== 1 ? 's' : ''}
-                </span>
-              </div>
-            </div>
-
-            {/* Show extras if any */}
-            {(cartItems[0]?.extras.guidedTour || cartItems[0]?.extras.insurance || cartItems[0]?.extras.mealPlan) && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Included Extras:</p>
-                <div className="flex flex-wrap gap-1">
-                  {cartItems[0].extras.guidedTour && (
-                    <Badge variant="secondary" className="text-xs">Professional Guide</Badge>
-                  )}
-                  {cartItems[0].extras.insurance && (
-                    <Badge variant="secondary" className="text-xs">Travel Insurance</Badge>
-                  )}
-                  {cartItems[0].extras.mealPlan && (
-                    <Badge variant="secondary" className="text-xs">Full Meal Plan</Badge>
-                  )}
+        {!isCustomTour && cartItems && cartItems.length > 0 && (
+          <div className="space-y-4">
+            {cartItems.map((item, index) => (
+              <div key={index} className="space-y-2">
+                <div>
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                    {item.tourName}
+                  </h3>
                 </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>{format(new Date(item.date), 'dd MMM yyyy')}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <Users className="w-3.5 h-3.5" />
+                    <span>{item.numberOfPeople} {item.numberOfPeople === 1 ? 'Traveler' : 'Travelers'}</span>
+                  </div>
+                </div>
+
+                {/* Extras */}
+                {(item.extras.guidedTour || item.extras.insurance || item.extras.mealPlan) && (
+                  <div className="flex flex-wrap gap-1">
+                    {item.extras.guidedTour && (
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5">Guide</Badge>
+                    )}
+                    {item.extras.insurance && (
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5">Insurance</Badge>
+                    )}
+                    {item.extras.mealPlan && (
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5">Meals</Badge>
+                    )}
+                  </div>
+                )}
+
+                {index < cartItems.length - 1 && <Separator className="my-3" />}
               </div>
-            )}
+            ))}
           </div>
         )}
 
@@ -179,84 +164,46 @@ export default function BookingSummary({
 
         {/* Pricing Breakdown */}
         <div className="space-y-3">
-          {/* Custom Tour Pricing */}
-          {isCustomTour && customTourData && (
-            <div className="flex justify-between font-medium">
-              <span>Custom Tour Package:</span>
-              <span>{formatINR(customTourData.amount)}</span>
-            </div>
-          )}
-
-          {/* Regular Tour Pricing */}
-          {!isCustomTour && cartItems?.map((item, index) => {
-            const pricePerPersonAmount = parseFloat(item.pricePerPerson);
-            const calculatedTotal = pricePerPersonAmount * item.numberOfPeople;
-
-            return (
-              <div key={index} className="space-y-1">
-                {cartItems.length > 1 && (
-                  <p className="text-sm font-medium">{item.tourName}</p>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span>
-                    Price per Person: {formatINR(pricePerPersonAmount)} × {item.numberOfPeople}
-                  </span>
-                  <span>{formatINR(calculatedTotal)}</span>
-                </div>
-              </div>
-            );
-          })}
-
-          <div className="flex justify-between font-medium">
-            <span>Subtotal:</span>
-            <span>{formatINR(subtotal)}</span>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+            <span className="font-medium text-gray-900 dark:text-white">{formatINR(subtotal)}</span>
           </div>
 
           {discount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span className="flex items-center gap-1">
-                <Tag className="w-4 h-4" />
-                Coupon ({couponCode}):
+            <div className="flex justify-between text-sm">
+              <span className="flex items-center gap-1.5 text-green-600 dark:text-green-400">
+                <Tag className="w-3.5 h-3.5" />
+                Discount ({couponCode})
               </span>
-              <span>-{formatINR(discount)}</span>
+              <span className="font-medium text-green-600 dark:text-green-400">-{formatINR(discount)}</span>
             </div>
           )}
 
           <div className="flex justify-between text-sm">
-            <span>Taxes & Fees:</span>
-            <span>{formatINR(taxesAndFees)}</span>
+            <span className="text-gray-600 dark:text-gray-400">Taxes & Fees</span>
+            <span className="font-medium text-gray-900 dark:text-white">{formatINR(taxesAndFees)}</span>
           </div>
 
           <Separator />
 
-          <div className="flex justify-between text-lg font-bold">
-            <span>Total:</span>
-            <span className="text-green-600">{formatINR(total)}</span>
+          <div className="flex justify-between items-center p-3 bg-gray-900 dark:bg-white rounded-lg">
+            <span className="text-sm font-bold text-white dark:text-gray-900">Total Amount</span>
+            <span className="text-xl font-bold text-white dark:text-gray-900">{formatINR(total)}</span>
           </div>
         </div>
 
-        {/* Additional Information */}
-        <div className="bg-gray-50 rounded-lg p-3 space-y-1">
-          <p className="text-xs text-gray-600 font-medium">
-            {isCustomTour ? 'Custom Tour Details:' : 'Booking Details:'}
+        {/* Info Note */}
+        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <p className="text-xs text-blue-800 dark:text-blue-400 leading-relaxed">
+            {isCustomTour
+              ? '✓ Custom itinerary tailored to your needs'
+              : '✓ Instant booking confirmation'
+            }
+            <br />
+            ✓ Free cancellation up to 24 hours before departure
+            <br />
+            ✓ 24/7 customer support included
           </p>
-          <ul className="text-xs text-gray-600 space-y-0.5">
-            {isCustomTour ? (
-              <>
-                <li>• Custom itinerary based on your requirements</li>
-                <li>• Flexible dates and personalized experience</li>
-                <li>• Direct coordination with our travel experts</li>
-                <li>• Full payment secures your custom booking</li>
-              </>
-            ) : (
-              <>
-                <li>• Free cancellation up to 24 hours before start</li>
-                <li>• Instant confirmation upon payment</li>
-                <li>• Secure payment processing via Stripe</li>
-                <li>• All taxes and fees included in total price</li>
-              </>
-            )}
-          </ul>
         </div>
       </CardContent>
     </Card>

@@ -25,7 +25,7 @@ export async function GET() {
     // Transform to key-value pairs for easier frontend consumption
     const settingsObject: Record<string, any> = {};
     allSettings.forEach(setting => {
-      let value = setting.value;
+      let value: any = setting.value;
       
       // Parse value based on type
       if (setting.type === 'boolean') {
@@ -93,7 +93,6 @@ export async function POST(request: NextRequest) {
       { key: 'systemErrorAlerts', type: 'boolean', category: 'notifications', isPublic: false, description: 'Alert admins on system errors' },
       
       // API
-      { key: 'stripePublishableKey', type: 'string', category: 'api', isPublic: true, description: 'Stripe publishable key' },
       { key: 'googleAnalyticsId', type: 'string', category: 'api', isPublic: true, description: 'Google Analytics tracking ID' },
       { key: 'apiRateLimit', type: 'boolean', category: 'api', isPublic: false, description: 'Enable API rate limiting' },
       { key: 'maxRequestsPerMinute', type: 'number', category: 'api', isPublic: false, description: 'Maximum requests per minute per IP' },

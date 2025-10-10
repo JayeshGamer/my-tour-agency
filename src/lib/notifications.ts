@@ -98,9 +98,9 @@ export async function createPaymentNotification(
   bookingId?: string
 ) {
   const messages = {
-    success: `Payment of $${amount.toLocaleString()} processed successfully`,
-    failed: `Payment of $${amount.toLocaleString()} failed`,
-    refunded: `Refund of $${amount.toLocaleString()} processed`,
+    success: `Payment of ₹${amount.toLocaleString('en-IN')} processed successfully`,
+    failed: `Payment of ₹${amount.toLocaleString('en-IN')} failed`,
+    refunded: `Refund of ₹${amount.toLocaleString('en-IN')} processed`,
   };
 
   const priorities = {

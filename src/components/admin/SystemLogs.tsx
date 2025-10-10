@@ -58,7 +58,7 @@ export default function SystemLogs({ logs }: SystemLogsProps) {
     {
       id: "1",
       type: "payment_failure",
-      message: "StripeError: Card declined",
+      message: "PaymentError: Card declined",
       metadata: { cardLast4: "4242", amount: 999 },
       createdAt: new Date(Date.now() - 1000 * 60 * 10), // 10 minutes ago
       userId: null,
@@ -74,7 +74,7 @@ export default function SystemLogs({ logs }: SystemLogsProps) {
     {
       id: "3",
       type: "payment_failure",
-      message: "StripeError: Invalid CVC",
+      message: "PaymentError: Invalid CVC",
       metadata: { cardLast4: "1234" },
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
       userId: null,

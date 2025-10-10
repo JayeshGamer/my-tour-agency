@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { Chip } from "@/components/ui/chip";
 import { MapPin, Clock, DollarSign, Activity, TrendingUp, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,12 +42,18 @@ export function QuickFilterChips({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-5 shadow-lg">
-      <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-purple-500" />
-        Quick Filters
-      </h3>
-      <div className="flex flex-wrap gap-2">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-6 shadow-lg">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-purple-500" />
+          Quick Filters
+        </h3>
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          Click to apply filters instantly
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
         <AnimatePresence>
           {quickFilters.map((filter) => {
             const active = isActive(filter.category, filter.value);
@@ -59,6 +64,7 @@ export function QuickFilterChips({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
+                className="w-full"
               >
                 <Chip
                   label={filter.label}
@@ -74,7 +80,7 @@ export function QuickFilterChips({
                       onFilterSelect(filter.category, filter.value);
                     }
                   }}
-                  className="cursor-pointer hover:scale-105 transition-transform"
+                  className="cursor-pointer hover:scale-105 transition-transform w-full justify-center"
                 />
               </motion.div>
             );
@@ -84,4 +90,3 @@ export function QuickFilterChips({
     </div>
   );
 }
-

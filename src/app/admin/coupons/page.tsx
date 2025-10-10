@@ -3,10 +3,10 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { coupons } from "@/lib/db/schema";
 import { desc } from "drizzle-orm";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 import CouponsList from "@/components/admin/CouponsList";
-import { DollarSign, Plus, Percent, TrendingUp, ToggleRight } from "lucide-react";
+import { DollarSign, Plus, Percent, TrendingUp, ToggleRight, Sparkles, Tag, Download } from "lucide-react";
 import Link from "next/link";
 
 async function getCouponsData() {
@@ -46,11 +46,11 @@ export default async function CouponsPage() {
 
   if (!session?.user || session.user.role !== 'Admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Unauthorized Access</h1>
-          <p className="text-gray-600 mb-4">You do not have permission to access this area.</p>
-          <Link href="/" className="text-blue-600 hover:underline">
+          <h1 className="text-2xl font-bold text-destructive mb-4">Unauthorized Access</h1>
+          <p className="text-muted-foreground mb-4">You do not have permission to access this area.</p>
+          <Link href="/" className="text-primary hover:underline">
             Return to Home
           </Link>
         </div>
@@ -60,69 +60,135 @@ export default async function CouponsPage() {
 
   const data = await getCouponsData();
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <DollarSign className="h-8 w-8 text-primary" />
-            Coupon Management
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Manage discount codes and promotions
-          </p>
+    <div className="space-y-6 animate-in fade-in duration-700">
+      {/* Enhanced Page Header with gradient */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent rounded-3xl blur-3xl" />
+        <div className="relative space-y-3 pb-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full" />
+                  <div className="relative bg-amber-500/10 p-3 rounded-2xl border border-amber-500/20">
+                    <Tag className="h-8 w-8 text-amber-600" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    Coupon Management
+                  </h1>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Sparkles className="h-4 w-4 text-amber-600" />
+                    <p className="text-muted-foreground font-medium">
+                      Manage discount codes • {data.stats.active} active promotions
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex items-center gap-3">
+              <RainbowButton variant="green" className="gap-2" asChild>
+                <Link href="/admin/coupons/new">
+                  <Plus className="h-4 w-4" />
+                  Create Coupon
+                </Link>
+              </RainbowButton>
+              <RainbowButton variant="red" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export
+              </RainbowButton>
+            </div>
+          </div>
         </div>
-        <Button asChild>
-          <Link href="/admin/coupons/new">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Coupon
-          </Link>
-        </Button>
       </div>
 
-      {/* Summary Stats */}
+      {/* Enhanced Summary Stats with Animations */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Coupons</p>
-                <p className="text-2xl font-bold text-green-600">{data.stats.active}</p>
+        {/* Active Coupons Card */}
+        <Card className="border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Coupons</p>
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold text-green-600">{data.stats.active}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">Currently valid</p>
               </div>
-              <ToggleRight className="h-8 w-8 text-green-400" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-green-500/20 blur-lg rounded-full" />
+                <div className="relative bg-green-500/10 p-3 rounded-xl border border-green-500/20">
+                  <ToggleRight className="h-7 w-7 text-green-600" />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Usage</p>
-                <p className="text-2xl font-bold text-blue-600">{data.stats.totalUsage}</p>
+        {/* Total Usage Card */}
+        <Card className="border-border hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Usage</p>
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold text-blue-600">{data.stats.totalUsage}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">Times redeemed</p>
               </div>
-              <Percent className="h-8 w-8 text-blue-400" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500/20 blur-lg rounded-full" />
+                <div className="relative bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
+                  <Percent className="h-7 w-7 text-blue-600" />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg. Usage Rate</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {data.stats.averageUsageRate}%
-                </p>
+        {/* Average Usage Rate Card */}
+        <Card className="border-border hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Avg. Usage Rate</p>
+                  <TrendingUp className="h-3.5 w-3.5 text-orange-600" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold bg-gradient-to-br from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                    {data.stats.averageUsageRate}%
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground">Redemption rate</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-orange-400" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-orange-500/20 blur-lg rounded-full" />
+                <div className="relative bg-orange-500/10 p-3 rounded-xl border border-orange-500/20">
+                  <TrendingUp className="h-7 w-7 text-orange-600" />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Coupons List */}
-      <CouponsList coupons={data.coupons} />
+      <div className="pb-8">
+        <CouponsList coupons={data.coupons} />
+      </div>
     </div>
   );
 }

@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import MyRequestsList from "@/components/tours/MyRequestsList";
+import { Sparkles } from "lucide-react";
+import Link from "next/link";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 
 export default async function MyRequestsPage() {
   try {
@@ -15,17 +18,38 @@ export default async function MyRequestsPage() {
     }
 
     return (
-      <div className="min-h-screen bg-gray-50 pt-24">
-        <div className="max-w-6xl mx-auto px-6 pb-16">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900">My Custom Tour Requests</h1>
-            <p className="text-gray-600 mt-2 text-lg">
-              Track the status of your custom tour requests and view quotes from our team.
-            </p>
+      <div className="w-full bg-gray-50 dark:bg-gray-950 min-h-screen">
+        {/* Simple Header */}
+        <section className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  My Custom Tour Requests
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Track and manage your custom tour requests
+                </p>
+              </div>
+              <RainbowButton
+                variant="black"
+                asChild
+              >
+                <Link href="/request-custom-tour">
+                  <Sparkles className="h-4 w-4 mr-2 inline" />
+                  Create New Request
+                </Link>
+              </RainbowButton>
+            </div>
           </div>
+        </section>
 
-          <MyRequestsList />
-        </div>
+        {/* Main Content Section */}
+        <section className="py-8 px-6 sm:px-8 lg:px-12">
+          <div className="max-w-7xl mx-auto">
+            <MyRequestsList />
+          </div>
+        </section>
       </div>
     );
   } catch (error) {

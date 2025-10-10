@@ -241,16 +241,6 @@ export default function SettingsForm({ initialSettings }: SettingsFormProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="stripe-key">Stripe Publishable Key</Label>
-              <Input 
-                id="stripe-key" 
-                type="password" 
-                value={settings.stripePublishableKey || ""}
-                onChange={(e) => handleInputChange("stripePublishableKey", e.target.value)}
-                placeholder="pk_test_..."
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="google-analytics">Google Analytics ID</Label>
               <Input 
                 id="google-analytics" 

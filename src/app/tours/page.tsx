@@ -1,19 +1,17 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import Link from "next/link";
 import { TourCard } from "@/components/tours/TourCard";
-import { BentoTourCard } from "@/components/tours/BentoTourCard";
 import { TourListCard } from "@/components/tours/TourListCard";
 import { FiltersSection } from "@/components/tours/FiltersSection";
-import { FeaturedToursCarousel } from "@/components/tours/FeaturedToursCarousel";
 import { QuickFilterChips } from "@/components/tours/QuickFilterChips";
 import { ViewToggle, ViewMode } from "@/components/tours/ViewToggle";
-import { RecentlyViewedTours } from "@/components/tours/RecentlyViewedTours";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, Map, Filter, X, SlidersHorizontal, Search, Loader2, Sparkles, TrendingUp, Grid3x3 } from "lucide-react";
+import { Map, Filter, X, SlidersHorizontal, Search, Loader2, Sparkles, TrendingUp, Grid3x3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -74,7 +72,7 @@ export default function ToursPage() {
     duration: [],
     activities: [],
   });
-  
+
   const toursPerPage = 12;
   const [displayedCount, setDisplayedCount] = useState(toursPerPage);
 
@@ -329,8 +327,21 @@ export default function ToursPage() {
     setHasMore(filteredAndSortedTours.length > displayedCount);
   }, [filteredAndSortedTours, displayedCount]);
 
+  // Define loadMoreTours before the observer useEffect
+  const loadMoreTours = useCallback(() => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+
+    setTimeout(() => {
+      setDisplayedCount(prev => prev + toursPerPage);
+      setLoadingMore(false);
+    }, 500);
+  }, [loadingMore, hasMore]);
+
   // Infinite scroll observer
   useEffect(() => {
+    const currentTarget = observerTarget.current;
+    
     const observer = new IntersectionObserver(
       entries => {
         if (entries[0].isIntersecting && hasMore && !loadingMore) {
@@ -340,26 +351,16 @@ export default function ToursPage() {
       { threshold: 0.1 }
     );
 
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
+    if (currentTarget) {
+      observer.observe(currentTarget);
     }
 
     return () => {
-      if (observerTarget.current) {
-        observer.unobserve(observerTarget.current);
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
       }
     };
-  }, [hasMore, loadingMore]);
-
-  const loadMoreTours = () => {
-    if (loadingMore || !hasMore) return;
-    setLoadingMore(true);
-
-    setTimeout(() => {
-      setDisplayedCount(prev => prev + toursPerPage);
-      setLoadingMore(false);
-    }, 500);
-  };
+  }, [hasMore, loadingMore, loadMoreTours]);
 
   const handleFilterChange = useCallback((newFilters: FilterState) => {
     setFilters(newFilters);
@@ -413,32 +414,59 @@ export default function ToursPage() {
   const progressValue = (tours.length / filteredAndSortedTours.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 pt-4">
       {/* Sticky Header Bar */}
-      <section className="sticky top-16 z-40 bg-white/80 dark:bg-gray-950/80 backdrop-blur-xl border-b-2 border-gray-200 dark:border-gray-800 shadow-lg">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            {/* Left: Title and breadcrumb */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                <a href="/" className="hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</a>
-                <span>/</span>
-                <span className="text-gray-900 dark:text-white font-semibold">All Tours</span>
-              </div>
+      <section className="sticky top-16 z-40 bg-white/95 dark:bg-gray-950/95 backdrop-blur-xl border-b-2 border-gray-200 dark:border-gray-800 shadow-lg">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          {/* Breadcrumb and Title Row */}
+          <div className="space-y-1.5 mb-3">
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <Link href="/" className="hover:text-gray-900 dark:hover:text-white transition-colors font-medium">Home</Link>
+              <span>/</span>
+              <span className="text-gray-900 dark:text-white font-semibold">All Tours</span>
+            </div>
+
+            {/* Title and Count */}
+            <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
                 <Map className="h-7 w-7 sm:h-8 sm:w-8 text-purple-600" />
                 Browse All Tours
-                {filteredAndSortedTours.length > 0 && (
-                  <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm sm:text-base font-bold px-3 py-1 border-0">
-                    {filteredAndSortedTours.length}
-                  </Badge>
-                )}
               </h1>
+              {filteredAndSortedTours.length > 0 && (
+                <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm sm:text-base font-bold px-3 py-1.5 border-0">
+                  {filteredAndSortedTours.length}
+                </Badge>
+              )}
             </div>
+          </div>
 
-            {/* Right: Search and View Toggle */}
+          {/* Category Tabs Row */}
+          <div className="mb-3">
+            <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 h-auto w-full sm:w-auto">
+                {categories.map((category) => {
+                  const Icon = category.icon;
+                  return (
+                    <TabsTrigger
+                      key={category.id}
+                      value={category.id}
+                      className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-900 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 rounded-lg font-semibold px-3 sm:px-4 py-2.5 text-sm"
+                    >
+                      <Icon className="h-4 w-4 mr-2" />
+                      {category.label}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Search, View Toggle, and Quick Filters Row */}
+          <div className="flex flex-col gap-3">
+            {/* Search and View Toggle */}
             <div className="flex items-center gap-3">
-              <div className="relative flex-1 lg:w-80">
+              <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
                 <Input
                   type="text"
@@ -464,75 +492,34 @@ export default function ToursPage() {
                 )}
               </Button>
             </div>
-          </div>
 
-          {/* Category Tabs */}
-          <div className="mt-4">
-            <Tabs value={activeCategory} onValueChange={setActiveCategory}>
-              <TabsList className="bg-gray-100 dark:bg-gray-800 p-1 rounded-xl border-2 border-gray-200 dark:border-gray-700">
-                {categories.map((category) => {
-                  const Icon = category.icon;
-                  return (
-                    <TabsTrigger
-                      key={category.id}
-                      value={category.id}
-                      className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-900 data-[state=active]:text-purple-600 dark:data-[state=active]:text-purple-400 rounded-lg font-semibold"
-                    >
-                      <Icon className="h-4 w-4 mr-2" />
-                      {category.label}
-                    </TabsTrigger>
-                  );
-                })}
-              </TabsList>
-            </Tabs>
+            {/* Quick Filters - Integrated into header */}
+            {!loading && activeQuickFilters.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
+              >
+                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 mb-2">
+                  <Filter className="h-3 w-3" />
+                  <span className="font-medium">Active Filters:</span>
+                </div>
+                <QuickFilterChips
+                  onFilterSelect={handleQuickFilterSelect}
+                  activeFilters={activeQuickFilters}
+                  onFilterRemove={handleQuickFilterRemove}
+                />
+              </motion.div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Main Content */}
-      <section className="py-8">
+      <section className="py-5">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Featured Tours Carousel */}
-          {!loading && allTours.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="mb-8"
-            >
-              <FeaturedToursCarousel tours={allTours} />
-            </motion.div>
-          )}
-
-          {/* Recently Viewed Tours */}
-          {!loading && allTours.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mb-8"
-            >
-              <RecentlyViewedTours tours={allTours} />
-            </motion.div>
-          )}
-
-          {/* Quick Filter Chips */}
-          {!loading && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mb-8"
-            >
-              <QuickFilterChips
-                onFilterSelect={handleQuickFilterSelect}
-                activeFilters={activeQuickFilters}
-                onFilterRemove={handleQuickFilterRemove}
-              />
-            </motion.div>
-          )}
-
-          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Filters Sidebar */}
             <AnimatePresence>
               {showFilters && (
@@ -543,7 +530,7 @@ export default function ToursPage() {
                   transition={{ duration: 0.3 }}
                   className="lg:w-80 flex-shrink-0"
                 >
-                  <div className="lg:sticky lg:top-36 space-y-4">
+                  <div className="lg:sticky lg:top-[172px] space-y-4">
                     <div className="bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden">
                       <div className="p-5 border-b-2 border-gray-200 dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
                         <div className="flex items-center gap-3">
@@ -584,7 +571,7 @@ export default function ToursPage() {
                   onClick={() => setShowFilters(true)}
                   variant="outline"
                   size="lg"
-                  className="sticky top-36 h-14 w-14 rounded-2xl border-2 border-purple-600 dark:border-purple-400 hover:bg-purple-600 hover:text-white dark:hover:bg-purple-400 dark:hover:text-gray-900 p-0 shadow-lg"
+                  className="sticky top-[172px] h-14 w-14 rounded-2xl border-2 border-purple-600 dark:border-purple-400 hover:bg-purple-600 hover:text-white dark:hover:bg-purple-400 dark:hover:text-gray-900 p-0 shadow-lg"
                 >
                   <SlidersHorizontal className="h-6 w-6" />
                 </Button>
@@ -594,7 +581,7 @@ export default function ToursPage() {
             {/* Main Content Area */}
             <div className="flex-1 min-w-0">
               {/* Controls Bar */}
-              <div className="mb-6 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-5 shadow-lg">
+              <div className="mb-5 bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-4 shadow-lg">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="space-y-2">
                     <p className="text-gray-900 dark:text-white font-bold text-base sm:text-lg">
@@ -685,42 +672,11 @@ export default function ToursPage() {
                         ))}
                       </motion.div>
                     )}
-
-                    {viewMode === "bento" && (
-                      <motion.div
-                        key="bento"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr"
-                      >
-                        {tours.map((tour, index) => {
-                          // Make every 4th and 5th item large in bento grid
-                          const isLarge = (index % 7 === 3 || index % 7 === 4);
-                          return (
-                            <motion.div
-                              key={tour.id}
-                              initial={{ opacity: 0, scale: 0.9 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.3, delay: index * 0.05 }}
-                              className={cn(isLarge && "md:col-span-2")}
-                            >
-                              <BentoTourCard
-                                tour={tour}
-                                featured={tour.featured}
-                                large={isLarge}
-                              />
-                            </motion.div>
-                          );
-                        })}
-                      </motion.div>
-                    )}
                   </AnimatePresence>
 
                   {/* Infinite Scroll Trigger & Load More */}
                   {hasMore && (
-                    <div ref={observerTarget} className="mt-10 flex justify-center">
+                    <div ref={observerTarget} className="mt-8 flex justify-center">
                       {loadingMore ? (
                         <div className="flex items-center gap-3 text-purple-600 dark:text-purple-400">
                           <Loader2 className="h-6 w-6 animate-spin" />
@@ -753,7 +709,7 @@ export default function ToursPage() {
                     No tours found
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                    We couldn't find any tours matching your criteria. Try adjusting your filters or search query.
+                    We couldn&apos;t find any tours matching your criteria. Try adjusting your filters or search query.
                   </p>
                   <Button
                     onClick={clearAllFilters}

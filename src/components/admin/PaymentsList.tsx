@@ -96,56 +96,7 @@ export default function PaymentsList({ payments }: PaymentsListProps) {
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
 
-  const handleRefund = async (paymentId: string, amount?: number) => {
-    if (!confirm(`Are you sure you want to refund this payment${amount ? ` for $${(amount / 100).toFixed(2)}` : ''}?`)) {
-      return;
-    }
 
-    setIsProcessing(paymentId);
-    try {
-      const response = await fetch(`/api/admin/payments/${paymentId}/refund`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ amount }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to process refund');
-      }
-
-      toast.success('Refund processed successfully');
-      router.refresh();
-    } catch (error: any) {
-      console.error('Error processing refund:', error);
-      toast.error(error.message || 'Failed to process refund');
-    } finally {
-      setIsProcessing(null);
-    }
-  };
-
-  const handleSyncStripe = async () => {
-    setIsProcessing('sync');
-    try {
-      const response = await fetch('/api/admin/payments/sync', {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to sync with Stripe');
-      }
-
-      toast.success('Successfully synced with Stripe');
-      router.refresh();
-    } catch (error: any) {
-      console.error('Error syncing with Stripe:', error);
-      toast.error(error.message || 'Failed to sync with Stripe');
-    } finally {
-      setIsProcessing(null);
-    }
-  };
 
   // Handle case where payments might be undefined or null
   const safePayments = payments || [];
@@ -154,14 +105,6 @@ export default function PaymentsList({ payments }: PaymentsListProps) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>All Payments ({safePayments.length})</CardTitle>
-        <Button 
-          variant="outline" 
-          onClick={handleSyncStripe}
-          disabled={isProcessing === 'sync'}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isProcessing === 'sync' ? 'animate-spin' : ''}`} />
-          Sync Stripe
-        </Button>
       </CardHeader>
       <CardContent>
         <Table>
@@ -240,23 +183,6 @@ export default function PaymentsList({ payments }: PaymentsListProps) {
                           <Eye className="mr-2 h-4 w-4" />
                           View Details
                         </DropdownMenuItem>
-                        
-                        {payment.status === "succeeded" && (
-                          <>
-                            <DropdownMenuItem 
-                              onClick={() => handleRefund(payment.id, payment.amount)}
-                            >
-                              <DollarSign className="mr-2 h-4 w-4" />
-                              Full Refund
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleRefund(payment.id)}
-                            >
-                              <DollarSign className="mr-2 h-4 w-4" />
-                              Partial Refund
-                            </DropdownMenuItem>
-                          </>
-                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

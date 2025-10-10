@@ -148,122 +148,130 @@ export default function ReviewsList({ reviews }: ReviewsListProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>All Reviews ({reviews.length})</CardTitle>
+    <Card className="border-border">
+      <CardHeader className="border-b border-border">
+        <CardTitle className="text-xl font-semibold text-foreground">
+          All Reviews ({reviews.length})
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Tour</TableHead>
-              <TableHead>Rating</TableHead>
-              <TableHead>Comment</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reviews.length > 0 ? (
-              reviews.map((review) => (
-                <TableRow key={review.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={review.user.image || ""} alt={review.user.name || review.user.email || "User"} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                          {getUserInitials(review.user.name, review.user.email)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <div className="font-medium text-sm">
-                          {review.user.name || review.user.email?.split('@')[0] || "Anonymous"}
-                        </div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {review.user.email || "No email"}
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-b border-border">
+                <TableHead className="text-muted-foreground">User</TableHead>
+                <TableHead className="text-muted-foreground">Tour</TableHead>
+                <TableHead className="text-muted-foreground">Rating</TableHead>
+                <TableHead className="text-muted-foreground">Comment</TableHead>
+                <TableHead className="text-muted-foreground">Status</TableHead>
+                <TableHead className="text-muted-foreground">Date</TableHead>
+                <TableHead className="text-right text-muted-foreground">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <TableRow key={review.id} className="border-b border-border">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={review.user.image || ""} alt={review.user.name || review.user.email || "User"} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            {getUserInitials(review.user.name, review.user.email)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm text-foreground">
+                            {review.user.name || review.user.email?.split('@')[0] || "Anonymous"}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {review.user.email || "No email"}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="font-medium text-sm truncate max-w-32" title={review.tour.title}>
-                      {review.tour.title}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <StarRating rating={review.rating} />
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm max-w-48 truncate" title={review.comment}>
-                      {review.comment}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(review.status)}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    <DateDisplay date={review.createdAt} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          disabled={isProcessing === review.id}
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Details
-                        </DropdownMenuItem>
-                        
-                        {review.status !== "approved" && (
-                          <DropdownMenuItem 
-                            onClick={() => handleUpdateStatus(review.id, "approved")}
+                    </TableCell>
+                    <TableCell>
+                      <div className="font-medium text-sm truncate max-w-32 text-foreground" title={review.tour.title}>
+                        {review.tour.title}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <StarRating rating={review.rating} />
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm max-w-48 truncate text-muted-foreground" title={review.comment}>
+                        {review.comment}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(review.status)}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(review.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            disabled={isProcessing === review.id}
                           >
-                            <Check className="mr-2 h-4 w-4" />
-                            Approve
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Eye className="mr-2 h-4 w-4" />
+                            View Details
                           </DropdownMenuItem>
-                        )}
-                        
-                        {review.status !== "rejected" && (
-                          <DropdownMenuItem 
-                            onClick={() => handleUpdateStatus(review.id, "rejected")}
+
+                          {review.status !== "approved" && (
+                            <DropdownMenuItem
+                              onClick={() => handleUpdateStatus(review.id, "approved")}
+                            >
+                              <Check className="mr-2 h-4 w-4" />
+                              Approve
+                            </DropdownMenuItem>
+                          )}
+
+                          {review.status !== "rejected" && (
+                            <DropdownMenuItem
+                              onClick={() => handleUpdateStatus(review.id, "rejected")}
+                            >
+                              <X className="mr-2 h-4 w-4" />
+                              Reject
+                            </DropdownMenuItem>
+                          )}
+
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => handleDeleteReview(review.id)}
                           >
-                            <X className="mr-2 h-4 w-4" />
-                            Reject
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Review
                           </DropdownMenuItem>
-                        )}
-                        
-                        <DropdownMenuItem 
-                          className="text-red-600"
-                          onClick={() => handleDeleteReview(review.id)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete Review
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-16">
+                    <MessageSquare className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">No reviews found</h3>
+                    <p className="text-muted-foreground">Customer reviews will appear here when submitted.</p>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-gray-500">
-                  <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600">No reviews found</h3>
-                  <p className="text-gray-500 mt-2">Customer reviews will appear here when submitted.</p>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

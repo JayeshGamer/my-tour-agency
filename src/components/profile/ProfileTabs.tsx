@@ -5,13 +5,14 @@ import {
   Calendar, 
   Heart, 
   User, 
-  CreditCard, 
-  MapPin, 
-  Trash2, 
-  Plus,
+  MapPin,
+  Trash2,
   Eye,
-  Edit,
-  X
+  X,
+  Sparkles,
+  Clock,
+  Users,
+  IndianRupee
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +22,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 interface Booking {
   id: string;
@@ -117,293 +119,325 @@ export default function ProfileTabs({ bookings, wishlist, user }: ProfileTabsPro
     }
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
-        return 'default';
+        return {
+          variant: 'default' as const,
+          className: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-400'
+        };
       case 'pending':
-        return 'secondary';
+        return {
+          variant: 'secondary' as const,
+          className: 'bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-950 dark:text-amber-400'
+        };
       case 'cancelled':
       case 'canceled':
-        return 'destructive';
+        return {
+          variant: 'destructive' as const,
+          className: 'bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-400'
+        };
       default:
-        return 'secondary';
+        return {
+          variant: 'secondary' as const,
+          className: 'bg-gray-100 text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400'
+        };
     }
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="orders" className="flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          My Orders
-        </TabsTrigger>
-        <TabsTrigger value="favorites" className="flex items-center gap-2">
-          <Heart className="h-4 w-4" />
-          Favorites
-        </TabsTrigger>
-        <TabsTrigger value="details" className="flex items-center gap-2">
-          <User className="h-4 w-4" />
-          My Details
-        </TabsTrigger>
-        <TabsTrigger value="payments" className="flex items-center gap-2">
-          <CreditCard className="h-4 w-4" />
-          Payment Methods
-        </TabsTrigger>
-        <TabsTrigger value="addresses" className="flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
-          Address Book
-        </TabsTrigger>
-      </TabsList>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+    >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-1 shadow-sm">
+          <TabsTrigger
+            value="orders"
+            className="data-[state=active]:bg-[#030712] dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-[#030712] text-gray-700 dark:text-gray-300 gap-2"
+          >
+            <Calendar className="h-4 w-4" />
+            <span className="hidden sm:inline">My Bookings</span>
+            <span className="sm:hidden">Bookings</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="favorites"
+            className="data-[state=active]:bg-[#030712] dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-[#030712] text-gray-700 dark:text-gray-300 gap-2"
+          >
+            <Heart className="h-4 w-4" />
+            <span className="hidden sm:inline">Favorites</span>
+            <span className="sm:hidden">Saved</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="details"
+            className="data-[state=active]:bg-[#030712] dark:data-[state=active]:bg-white data-[state=active]:text-white dark:data-[state=active]:text-[#030712] text-gray-700 dark:text-gray-300 gap-2"
+          >
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">My Details</span>
+            <span className="sm:hidden">Details</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* My Orders Tab */}
-      <TabsContent value="orders" className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>My Bookings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {bookings.length === 0 ? (
-              <div className="text-center py-8">
-                <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-500 mb-6">You haven&apos;t made any bookings yet.</p>
-                <Link href="/tours">
-                  <Button>Browse Tours</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {bookings.map((booking) => (
-                  <div key={booking.id} className="border rounded-lg p-4 flex gap-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden">
-                        {booking.tour?.imageUrl ? (
-                          booking.tour.imageUrl.startsWith('/api/placeholder') ? (
-                            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                              <span className="text-white text-xs font-semibold">Tour</span>
-                            </div>
-                          ) : (
+        {/* My Orders Tab */}
+        <TabsContent value="orders" className="mt-6">
+          {bookings.length === 0 ? (
+            <Card className="border-gray-200 dark:border-gray-800 shadow-sm">
+              <CardContent className="p-12">
+                <div className="text-center">
+                  <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-6">
+                    <Calendar className="h-10 w-10 text-gray-400 dark:text-gray-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">No bookings yet</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                    Start your adventure by booking an amazing tour from our collection.
+                  </p>
+                  <Link href="/tours">
+                    <Button className="bg-[#030712] dark:bg-white text-white dark:text-[#030712] hover:bg-gray-900 dark:hover:bg-gray-100">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Browse Tours
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {bookings.map((booking, index) => {
+                const statusConfig = getStatusConfig(booking.status);
+                return (
+                  <motion.div
+                    key={booking.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Card className="group overflow-hidden border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-all duration-300 hover:shadow-lg">
+                      <div className="flex flex-col sm:flex-row gap-4 p-6">
+                        {/* Tour Image */}
+                        <div className="flex-shrink-0 w-full sm:w-32 h-32 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+                          {booking.tour?.imageUrl ? (
                             <Image
                               src={booking.tour.imageUrl}
                               alt={booking.tour.name}
-                              width={96}
-                              height={96}
-                              className="object-cover w-full h-full"
+                              width={128}
+                              height={128}
+                              className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
                             />
-                          )
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                            <span className="text-white text-xs font-semibold">Tour</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-lg">{booking.tour?.name}</h3>
-                          <p className="text-gray-600">{booking.tour?.location} • {booking.tour?.duration} days</p>
-                          <p className="text-sm text-gray-500">
-                            {booking.numberOfPeople} people • ${booking.totalPrice}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {format(new Date(booking.startDate), 'MMM dd, yyyy')}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant={getStatusBadgeVariant(booking.status)}>
-                            {booking.status}
-                          </Badge>
-                          <div className="mt-2">
-                            {booking.status.toLowerCase() === 'pending' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleCancelBooking(booking.id)}
-                                disabled={isLoading}
-                              >
-                                <X className="h-4 w-4 mr-1" />
-                                Cancel
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* Favorites Tab */}
-      <TabsContent value="favorites" className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Favorite Tours</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {wishlist.length === 0 ? (
-              <div className="text-center py-8">
-                <Heart className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-500 mb-6">You haven&apos;t added any tours to your favorites yet.</p>
-                <Link href="/tours">
-                  <Button>Browse Tours</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {wishlist.map((item) => (
-                  <div key={item.id} className="border rounded-lg p-4 flex gap-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-24 h-24 bg-gray-200 rounded-lg overflow-hidden">
-                        {item.tour?.imageUrl ? (
-                          item.tour.imageUrl.startsWith('/api/placeholder') ? (
-                            <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                              <span className="text-white text-xs font-semibold">Tour</span>
-                            </div>
                           ) : (
-                            <Image
-                              src={item.tour.imageUrl}
-                              alt={item.tour.name}
-                              width={96}
-                              height={96}
-                              className="object-cover w-full h-full"
-                            />
-                          )
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                            <span className="text-white text-xs font-semibold">Tour</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-lg">{item.tour?.name}</h3>
-                          <p className="text-gray-600">{item.tour?.location} • {item.tour?.duration} days</p>
-                          <p className="text-sm text-gray-500">
-                            From ${item.tour?.pricePerPerson} per person
-                          </p>
-                          {item.tour?.startDates && item.tour.startDates.length > 0 && (
-                            <p className="text-sm text-gray-500">
-                              Next date: {format(new Date(item.tour.startDates[0]), 'MMM dd, yyyy')}
-                            </p>
+                            <div className="w-full h-full bg-gradient-to-br from-[#030712] to-gray-900 dark:from-white dark:to-gray-200 flex items-center justify-center">
+                              <span className="text-white dark:text-[#030712] font-semibold">Tour</span>
+                            </div>
                           )}
                         </div>
-                        <div className="flex gap-2">
-                          <Link href={`/tours/${item.tour?.id}`}>
-                            <Button variant="outline" size="sm">
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
+
+                        {/* Booking Details */}
+                        <div className="flex-1 space-y-3">
+                          <div className="flex justify-between items-start gap-4">
+                            <div>
+                              <h3 className="font-bold text-lg text-gray-900 dark:text-white line-clamp-1">
+                                {booking.tour?.name}
+                              </h3>
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                <MapPin className="h-3.5 w-3.5" />
+                                <span>{booking.tour?.location}</span>
+                                <span>•</span>
+                                <Clock className="h-3.5 w-3.5" />
+                                <span>{booking.tour?.duration} days</span>
+                              </div>
+                            </div>
+                            <Badge className={statusConfig.className}>
+                              {booking.status}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 text-sm">
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                              <Calendar className="h-4 w-4" />
+                              <span>{format(new Date(booking.startDate), 'MMM dd, yyyy')}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                              <Users className="h-4 w-4" />
+                              <span>{booking.numberOfPeople} {booking.numberOfPeople > 1 ? 'people' : 'person'}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
+                            <div className="flex items-center gap-1">
+                              <IndianRupee className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                              <span className="font-bold text-gray-900 dark:text-white">{booking.totalPrice}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <Link href={`/tours/${booking.tour?.id}`}>
+                                <Button variant="outline" size="sm" className="h-8 border-gray-300 dark:border-gray-700">
+                                  <Eye className="h-3.5 w-3.5 mr-1.5" />
+                                  View
+                                </Button>
+                              </Link>
+                              {booking.status.toLowerCase() === 'pending' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
+                                  onClick={() => handleCancelBooking(booking.id)}
+                                  disabled={isLoading}
+                                >
+                                  <X className="h-3.5 w-3.5 mr-1.5" />
+                                  Cancel
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Favorites Tab */}
+        <TabsContent value="favorites" className="mt-6">
+          {wishlist.length === 0 ? (
+            <Card className="border-gray-200 dark:border-gray-800 shadow-sm">
+              <CardContent className="p-12">
+                <div className="text-center">
+                  <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto mb-6">
+                    <Heart className="h-10 w-10 text-gray-400 dark:text-gray-600" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">No favorites yet</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                    Save tours you love to easily find them later.
+                  </p>
+                  <Link href="/tours">
+                    <Button className="bg-[#030712] dark:bg-white text-white dark:text-[#030712] hover:bg-gray-900 dark:hover:bg-gray-100">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Browse Tours
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {wishlist.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card className="group overflow-hidden border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 transition-all duration-300 hover:shadow-lg">
+                    <div className="flex flex-col sm:flex-row gap-4 p-6">
+                      {/* Tour Image */}
+                      <div className="flex-shrink-0 w-full sm:w-32 h-32 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+                        {item.tour?.imageUrl ? (
+                          <Image
+                            src={item.tour.imageUrl}
+                            alt={item.tour.name}
+                            width={128}
+                            height={128}
+                            className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-[#030712] to-gray-900 dark:from-white dark:to-gray-200 flex items-center justify-center">
+                            <span className="text-white dark:text-[#030712] font-semibold">Tour</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tour Details */}
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <h3 className="font-bold text-lg text-gray-900 dark:text-white line-clamp-1">
+                            {item.tour?.name}
+                          </h3>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            <MapPin className="h-3.5 w-3.5" />
+                            <span>{item.tour?.location}</span>
+                            <span>•</span>
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>{item.tour?.duration} days</span>
+                          </div>
+                        </div>
+
+                        <div className="text-sm">
+                          <p className="text-gray-600 dark:text-gray-400">From</p>
+                          <p className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-1">
+                            <IndianRupee className="h-4 w-4" />
+                            {item.tour?.pricePerPerson}
+                            <span className="text-sm font-normal text-gray-600 dark:text-gray-400"> per person</span>
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-800">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {item.tour?.startDates && item.tour.startDates.length > 0 && (
+                              <>Next: {format(new Date(item.tour.startDates[0]), 'MMM dd, yyyy')}</>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Link href={`/tours/${item.tour?.id}`}>
+                              <Button variant="default" size="sm" className="h-8 bg-[#030712] dark:bg-white text-white dark:text-[#030712] hover:bg-gray-900 dark:hover:bg-gray-100">
+                                <Eye className="h-3.5 w-3.5 mr-1.5" />
+                                View
+                              </Button>
+                            </Link>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 border-red-200 dark:border-red-800"
+                              onClick={() => handleRemoveFavorite(item.id)}
+                              disabled={isLoading}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
-                          </Link>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRemoveFavorite(item.id)}
-                            disabled={isLoading}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
-      {/* My Details Tab */}
-      <TabsContent value="details" className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">First Name</label>
-                <p className="text-gray-900">{user.firstName || 'Not provided'}</p>
+        {/* My Details Tab */}
+        <TabsContent value="details" className="mt-6">
+          <Card className="border-gray-200 dark:border-gray-800 shadow-sm">
+            <CardHeader className="border-b border-gray-200 dark:border-gray-800">
+              <CardTitle className="text-xl">Personal Information</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">First Name</label>
+                  <p className="text-gray-900 dark:text-white font-medium">{user.firstName || 'Not provided'}</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Last Name</label>
+                  <p className="text-gray-900 dark:text-white font-medium">{user.lastName || 'Not provided'}</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Email Address</label>
+                  <p className="text-gray-900 dark:text-white font-medium">{user.email}</p>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Phone Number</label>
+                  <p className="text-gray-500 dark:text-gray-500 italic">Not provided</p>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">Address</label>
+                  <p className="text-gray-500 dark:text-gray-500 italic">Not provided</p>
+                </div>
               </div>
-              <div>
-                <label className="text-sm font-medium">Last Name</label>
-                <p className="text-gray-900">{user.lastName || 'Not provided'}</p>
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Email</label>
-              <p className="text-gray-900">{user.email}</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Phone</label>
-              <p className="text-gray-500">Not provided</p>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Address</label>
-              <p className="text-gray-500">Not provided</p>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* Payment Methods Tab */}
-      <TabsContent value="payments" className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              Payment Methods
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Add New
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <CreditCard className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500 mb-4">No payment methods added yet.</p>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Payment Method
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* Address Book Tab */}
-      <TabsContent value="addresses" className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              Address Book
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Add New
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <MapPin className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <p className="text-gray-500 mb-4">No addresses saved yet.</p>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Address
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </motion.div>
   );
 }

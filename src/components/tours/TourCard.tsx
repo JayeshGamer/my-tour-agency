@@ -84,28 +84,28 @@ export function TourCard({ tour }: TourCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 group relative cursor-pointer border-2 border-gray-200 dark:border-gray-800 hover:border-purple-500 dark:hover:border-purple-400 bg-white dark:bg-gray-900">
+    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 group relative cursor-pointer border-2 border-gray-200 dark:border-gray-800 hover:border-gray-900 dark:hover:border-white bg-white dark:bg-gray-900">
       {/* Labels/Badges */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
         {tour.featured && (
-          <Badge className="bg-yellow-500 text-white hover:bg-yellow-600 border-0 shadow-lg">
+          <Badge className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 border-0 shadow-lg font-semibold">
             <Star className="h-3 w-3 mr-1 fill-current" />
             Featured
           </Badge>
         )}
         {tour.discount && (
-          <Badge className="bg-red-500 text-white hover:bg-red-600 border-0 shadow-lg font-bold">
+          <Badge className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 border-0 shadow-lg font-bold">
             {tour.discount}% OFF
           </Badge>
         )}
         {tour.isNew && (
-          <Badge className="bg-green-500 text-white hover:bg-green-600 border-0 shadow-lg">
+          <Badge className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 border-0 shadow-lg font-semibold">
             <Sparkles className="h-3 w-3 mr-1 fill-current" />
             New
           </Badge>
         )}
         {tour.isPopular && (
-          <Badge className="bg-blue-500 text-white hover:bg-blue-600 border-0 shadow-lg">
+          <Badge className="bg-gray-900 text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 border-0 shadow-lg font-semibold">
             <TrendingUp className="h-3 w-3 mr-1" />
             Popular
           </Badge>
@@ -122,8 +122,8 @@ export function TourCard({ tour }: TourCardProps) {
         <Heart
           className={`h-5 w-5 transition-all duration-200 ${
             isWishlisted
-              ? "fill-red-500 text-red-500"
-              : "text-gray-700 dark:text-gray-300 group-hover/heart:text-red-500"
+              ? "fill-gray-900 text-gray-900 dark:fill-white dark:text-white"
+              : "text-gray-700 dark:text-gray-300 group-hover/heart:text-gray-900 dark:group-hover/heart:text-white"
           }`}
         />
       </button>
@@ -145,13 +145,7 @@ export function TourCard({ tour }: TourCardProps) {
           {/* Difficulty Badge on Image */}
           <div className="absolute bottom-4 left-4">
             <Badge
-              className={`${
-                tour.difficulty === "Easy"
-                  ? "bg-green-500 text-white"
-                  : tour.difficulty === "Moderate"
-                  ? "bg-yellow-500 text-white"
-                  : "bg-red-500 text-white"
-              } border-0 shadow-lg font-semibold`}
+              className="bg-white/90 text-gray-900 dark:bg-gray-900/90 dark:text-white border-0 shadow-lg font-semibold backdrop-blur-sm"
             >
               {tour.difficulty}
             </Badge>
@@ -162,7 +156,7 @@ export function TourCard({ tour }: TourCardProps) {
       <CardContent className="p-6">
         {/* Tour Name - Clickable */}
         <Link href={`/tours/${tour.id}`} className="block">
-          <h3 className="font-bold text-xl mb-3 line-clamp-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors min-h-[3.5rem] text-gray-900 dark:text-white">
+          <h3 className="font-bold text-xl mb-3 line-clamp-2 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors min-h-[3.5rem] text-gray-900 dark:text-white">
             {tour.name}
           </h3>
         </Link>
@@ -221,7 +215,7 @@ export function TourCard({ tour }: TourCardProps) {
           {/* View Details Button */}
           <Link href={`/tours/${tour.id}`}>
             <Button
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all border-0"
+              className="bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-all border-0"
               size="default"
             >
               View Details

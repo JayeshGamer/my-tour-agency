@@ -3,11 +3,10 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { reviews, users, tours } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 import ReviewsList from "@/components/admin/ReviewsList";
-import { MessageSquare, CheckCircle, XCircle, Clock, TrendingUp } from "lucide-react";
+import { MessageSquare, CheckCircle, XCircle, Clock, TrendingUp, Sparkles, Star, Download, Filter } from "lucide-react";
 import Link from "next/link";
 
 async function getReviewsData() {
@@ -54,7 +53,7 @@ async function getReviewsData() {
     },
     tour: {
       id: review.tourId,
-      title: review.tourTitle
+      title: review.tourTitle || "Unknown Tour"
     }
   }));
 
@@ -78,11 +77,11 @@ export default async function ReviewsPage() {
 
   if (!session?.user || session.user.role !== 'Admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Unauthorized Access</h1>
-          <p className="text-gray-600 mb-4">You do not have permission to access this area.</p>
-          <Link href="/" className="text-blue-600 hover:underline">
+          <h1 className="text-2xl font-bold text-destructive mb-4">Unauthorized Access</h1>
+          <p className="text-muted-foreground mb-4">You do not have permission to access this area.</p>
+          <Link href="/" className="text-primary hover:underline">
             Return to Home
           </Link>
         </div>
@@ -93,88 +92,184 @@ export default async function ReviewsPage() {
   const data = await getReviewsData();
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <MessageSquare className="h-8 w-8 text-primary" />
-            Review Moderation
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Manage and moderate customer reviews • {data.stats.pending} pending approval
-          </p>
+    <div className="space-y-6 animate-in fade-in duration-700">
+      {/* Enhanced Page Header with gradient */}
+      <div className="relative">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-cyan-500/5 to-transparent rounded-3xl blur-3xl" />
+        <div className="relative space-y-3 pb-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
+                  <div className="relative bg-blue-500/10 p-3 rounded-2xl border border-blue-500/20">
+                    <MessageSquare className="h-8 w-8 text-blue-600" />
+                  </div>
+                </div>
+                <div>
+                  <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    Review Moderation
+                  </h1>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Sparkles className="h-4 w-4 text-blue-600" />
+                    <p className="text-muted-foreground font-medium">
+                      Manage customer reviews • {data.stats.pending} pending approval
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex items-center gap-3">
+              <RainbowButton variant="purple" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filter
+              </RainbowButton>
+              <RainbowButton variant="green" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export
+              </RainbowButton>
+            </div>
+          </div>
         </div>
-        <Button variant="outline">
-          Moderation Settings
-        </Button>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Reviews</p>
-                <p className="text-2xl font-bold">{data.stats.total}</p>
+      {/* Enhanced Summary Stats with Animations */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Total Reviews Card */}
+        <Card className="border-border hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Reviews</p>
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold text-foreground">{data.stats.total}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">All feedback</p>
               </div>
-              <MessageSquare className="h-8 w-8 text-gray-400" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500/20 blur-lg rounded-full" />
+                <div className="relative bg-blue-500/10 p-3 rounded-xl border border-blue-500/20">
+                  <MessageSquare className="h-7 w-7 text-blue-600" />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-orange-600">{data.stats.pending}</p>
+        {/* Pending Reviews Card */}
+        <Card className="border-border hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Pending</p>
+                  <div className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold text-orange-600">{data.stats.pending}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">Awaiting approval</p>
               </div>
-              <Clock className="h-8 w-8 text-orange-400" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-orange-500/20 blur-lg rounded-full" />
+                <div className="relative bg-orange-500/10 p-3 rounded-xl border border-orange-500/20">
+                  <Clock className="h-7 w-7 text-orange-600" />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Approved</p>
-                <p className="text-2xl font-bold text-green-600">{data.stats.approved}</p>
+        {/* Approved Reviews Card */}
+        <Card className="border-border hover:shadow-xl hover:shadow-green-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Approved</p>
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold text-green-600">{data.stats.approved}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">Published</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-400" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-green-500/20 blur-lg rounded-full" />
+                <div className="relative bg-green-500/10 p-3 rounded-xl border border-green-500/20">
+                  <CheckCircle className="h-7 w-7 text-green-600" />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Rejected</p>
-                <p className="text-2xl font-bold text-red-600">{data.stats.rejected}</p>
+        {/* Rejected Reviews Card */}
+        <Card className="border-border hover:shadow-xl hover:shadow-red-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Rejected</p>
+                  <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold text-red-600">{data.stats.rejected}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">Declined</p>
               </div>
-              <XCircle className="h-8 w-8 text-red-400" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-red-500/20 blur-lg rounded-full" />
+                <div className="relative bg-red-500/10 p-3 rounded-xl border border-red-500/20">
+                  <XCircle className="h-7 w-7 text-red-600" />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Avg Rating</p>
-                <p className="text-2xl font-bold text-blue-600">{data.stats.averageRating}</p>
+        {/* Average Rating Card */}
+        <Card className="border-border hover:shadow-xl hover:shadow-amber-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Avg Rating</p>
+                  <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold bg-gradient-to-br from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                    {data.stats.averageRating}
+                  </p>
+                  <span className="text-sm text-muted-foreground">/5.0</span>
+                </div>
+                <p className="text-xs text-muted-foreground">Overall rating</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-blue-400" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-amber-500/20 blur-lg rounded-full" />
+                <div className="relative bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                  <TrendingUp className="h-7 w-7 text-amber-600" />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Reviews List */}
-      <ReviewsList reviews={data.reviews} />
+      <div className="pb-8">
+        <ReviewsList reviews={data.reviews} />
+      </div>
     </div>
   );
 }

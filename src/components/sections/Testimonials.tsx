@@ -1,3 +1,4 @@
+// filepath: d:\JS Mastery\Travel Agency\my-tour-agency\src\components\sections\Testimonials.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -217,3 +218,4 @@ export default function Testimonials() {
     </section>
   );
 }
+

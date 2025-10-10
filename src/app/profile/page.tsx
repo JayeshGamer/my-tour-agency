@@ -90,8 +90,8 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-24">
         {/* Profile Header */}
         <ProfileHeader user={userData.user} />
         

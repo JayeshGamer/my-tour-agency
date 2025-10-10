@@ -3,7 +3,7 @@ import { ArrowRight, Sparkles, Globe, Shield, Award, Users, Star, Zap, TrendingU
 import { Button } from "@/components/ui/button";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { TourCard } from "@/components/tours/TourCard";
-import Testimonials from "@/components/Testimonials";
+import Testimonials from "@/components/sections/Testimonials";
 import { Marquee } from "@/components/ui/marquee";
 import { AnimatedList } from "@/components/ui/animated-list";
 import { db } from "@/lib/db";
@@ -12,7 +12,7 @@ import { eq, and, desc } from "drizzle-orm";
 
 async function getFeaturedTours() {
   try {
-    const featuredTours = await db
+    return await db
       .select()
       .from(tours)
       .where(
@@ -23,8 +23,6 @@ async function getFeaturedTours() {
       )
       .orderBy(desc(tours.createdAt))
       .limit(3);
-
-    return featuredTours;
   } catch (error) {
     console.error('Error fetching featured tours:', error);
     return [];
@@ -366,13 +364,13 @@ export default async function HomePage() {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <RainbowButton className="h-12 px-6 text-base font-semibold" asChild>
+                <RainbowButton className="h-11 px-8 text-base font-semibold" asChild>
                   <Link href="/create-tour" className="flex items-center justify-center">
                     Design Your Tour
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </RainbowButton>
-                <RainbowButton className="h-12 px-6 text-base font-semibold" asChild>
+                <RainbowButton className="h-11 px-8 text-base font-semibold" asChild>
                   <Link href="/contact" className="flex items-center justify-center">
                     Talk to an Expert
                   </Link>

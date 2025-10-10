@@ -74,7 +74,6 @@ const getCategoryIcon = (category: string) => {
     case "user":
       return <User className="h-4 w-4 text-green-500" />;
     case "payment":
-    case "stripe":
       return <CreditCard className="h-4 w-4 text-purple-500" />;
     case "system":
     case "server":

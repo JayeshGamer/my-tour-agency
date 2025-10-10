@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 interface HydrationSafeProps {
   children: ReactNode;
   fallback?: ReactNode;
-  className?: string;
 }
 
 export default function HydrationSafe({
@@ -16,7 +15,6 @@ export default function HydrationSafe({
       <Loader2 className="h-4 w-4 animate-spin" />
     </div>
   ),
-  className = ""
 }: HydrationSafeProps) {
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -33,8 +31,8 @@ export default function HydrationSafe({
   }, []);
 
   if (!isHydrated) {
-    return <div className={className}>{fallback}</div>;
+    return <>{fallback}</>;
   }
 
-  return <div className={className}>{children}</div>;
+  return <>{children}</>;
 }

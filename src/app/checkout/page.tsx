@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from '../../lib/auth-client';
 import CheckoutForm from '../../components/checkout/CheckoutForm';
 import { toast } from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldCheck, Lock } from 'lucide-react';
 
 interface CartItem {
   tourId: string;
@@ -87,10 +87,10 @@ export default function CheckoutPage() {
 
   if (isPending || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#030712]">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p>Loading checkout...</p>
+          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-gray-900 dark:text-white" />
+          <p className="text-gray-600 dark:text-gray-400">Loading checkout...</p>
         </div>
       </div>
     );
@@ -101,60 +101,56 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {customTourData ? 'Custom Tour Payment' : 'Checkout'}
-          </h1>
-          <p className="text-gray-600">
-            {customTourData
-              ? 'Complete your custom tour booking and payment'
-              : 'Complete your booking and payment details'
-            }
-          </p>
-
-          {/* Demo Mode Notice */}
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-start gap-2">
-              <div className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold mt-0.5">
-                i
-              </div>
-              <div className="text-sm text-blue-800">
-                <p className="font-medium">Demo Mode Active</p>
-                <p>This checkout is running in demo mode. No real payments will be processed. Use any valid card format for demonstration purposes.</p>
-              </div>
+    <div className="min-h-screen bg-white dark:bg-[#030712]">
+      {/* Header Section */}
+      <section className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {customTourData ? 'Custom Tour Payment' : 'Secure Checkout'}
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                {customTourData
+                  ? 'Complete your custom tour booking'
+                  : 'Complete your booking securely'
+                }
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <Lock className="h-4 w-4" />
+              <span className="hidden sm:inline">Secure Payment</span>
             </div>
           </div>
 
-          {/* Custom Tour Info */}
-          {customTourData && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h3 className="font-semibold text-green-800 mb-2">Custom Tour Request</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-green-700">
-                <div>
-                  <span className="font-medium">Destination:</span> {customTourData.destination}
-                </div>
-                <div>
-                  <span className="font-medium">Group Size:</span> {customTourData.groupSize} people
-                </div>
-                <div>
-                  <span className="font-medium">Total Amount:</span> {customTourData.currency} {customTourData.amount.toLocaleString()}
-                </div>
-                <div>
-                  <span className="font-medium">Request ID:</span> {customTourData.requestId.slice(0, 8)}...
-                </div>
-              </div>
+          {/* Trust Badges */}
+          <div className="flex items-center gap-6 mt-6 pt-4 border-t border-gray-200 dark:border-gray-800">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-green-600" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">SSL Encrypted</span>
             </div>
-          )}
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-green-600" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">Secure Payment</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-green-600" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">Money Back Guarantee</span>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <CheckoutForm 
-          user={session.user}
-          cartItems={cartItems}
-          customTourData={customTourData}
-        />
-      </div>
+      {/* Main Content */}
+      <section className="py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <CheckoutForm
+            user={session.user}
+            cartItems={cartItems}
+            customTourData={customTourData}
+          />
+        </div>
+      </section>
     </div>
   );
 }

@@ -109,7 +109,7 @@ export default function RecentBookings({ bookings }: RecentBookingsProps) {
                   <TableCell>{item.booking.numberOfPeople}</TableCell>
                   <TableCell>{getStatusBadge(item.booking.status)}</TableCell>
                   <TableCell className="font-semibold">
-                    ${parseFloat(item.booking.totalPrice).toLocaleString()}
+                    ₹{parseFloat(item.booking.totalPrice).toLocaleString('en-IN')}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>

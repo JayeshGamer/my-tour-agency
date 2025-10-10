@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export type ViewMode = "grid" | "list" | "bento";
+export type ViewMode = "grid" | "list";
 
 interface ViewToggleProps {
   view: ViewMode;
@@ -58,27 +58,7 @@ export function ViewToggle({ view, onViewChange }: ViewToggleProps) {
           </TooltipTrigger>
           <TooltipContent>List View</TooltipContent>
         </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onViewChange("bento")}
-              className={cn(
-                "h-9 px-3 rounded-lg transition-all duration-200 text-xs font-semibold",
-                view === "bento"
-                  ? "bg-white dark:bg-gray-900 shadow-sm text-gray-900 dark:text-white"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              )}
-            >
-              Bento
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Bento Grid View</TooltipContent>
-        </Tooltip>
       </div>
     </TooltipProvider>
   );
 }
-

@@ -9,3 +9,10 @@ export { RainbowButtonDemo } from "./rainbow-button-demo";
 // Export the animated theme toggler so it can be imported from `@/components/ui`
 export { AnimatedThemeToggler } from "./animated-theme-toggler";
 export type { AnimatedThemeTogglerProps } from "./animated-theme-toggler";
+
+export { Dock, DockIcon, DockItem, DockLabel } from "./dock";
+export { AppleStyleDock } from "./dock-demo";
+
+// Export calendar component and demo
+export { Calendar } from "./calendar";
+export { CalendarDemo } from "./calendar-demo";

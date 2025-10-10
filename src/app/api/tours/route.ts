@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { tours } from '@/lib/db/schema';
-import { eq, and, gte, lte, like, or, desc } from 'drizzle-orm';
+import { eq, and, gte, lte, like, or, desc, ne } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,6 +19,10 @@ export async function GET(request: NextRequest) {
 
     // Only get active tours
     conditions.push(eq(tours.status, 'Active'));
+
+    // IMPORTANT: Exclude custom tours from public listing
+    // Custom tours are for specific customers only, not for public display
+    conditions.push(ne(tours.tourType, 'custom_created'));
 
     // Search filter
     if (search) {

@@ -21,28 +21,30 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { 
       code, 
-      type, 
-      value, 
+      name,
+      description,
+      discountType, 
+      discountValue, 
       isActive = true, 
       usageLimit, 
       validFrom, 
       validUntil, 
-      minOrderAmount, 
-      maxDiscountAmount 
+      minimumAmount, 
+      maximumDiscount 
     } = body;
 
     // Validate required fields
-    if (!code || !type || value === undefined) {
+    if (!code || !name || !discountType || discountValue === undefined) {
       return new Response(
-        JSON.stringify({ error: "Code, type, and value are required" }),
+        JSON.stringify({ error: "Code, name, discountType, and discountValue are required" }),
         { status: 400 }
       );
     }
 
-    // Validate type
-    if (!["percentage", "fixed"].includes(type)) {
+    // Validate discount type
+    if (!["percentage", "fixed"].includes(discountType)) {
       return new Response(
-        JSON.stringify({ error: "Type must be 'percentage' or 'fixed'" }),
+        JSON.stringify({ error: "Discount type must be 'percentage' or 'fixed'" }),
         { status: 400 }
       );
     }
@@ -66,15 +68,18 @@ export async function POST(request: NextRequest) {
       .insert(coupons)
       .values({
         code: code.toUpperCase(),
-        type,
-        value: value.toString(),
+        name,
+        description: description || null,
+        discountType,
+        discountValue: discountValue.toString(),
         isActive,
-        usageCount: 0,
+        usedCount: 0,
         usageLimit,
-        validFrom: new Date(validFrom || new Date()),
-        validUntil: validUntil ? new Date(validUntil) : null,
-        minOrderAmount: minOrderAmount ? minOrderAmount.toString() : null,
-        maxDiscountAmount: maxDiscountAmount ? maxDiscountAmount.toString() : null
+        validFrom: validFrom ? new Date(validFrom) : new Date(),
+        validUntil: validUntil ? new Date(validUntil) : new Date(),
+        minimumAmount: minimumAmount ? minimumAmount.toString() : null,
+        maximumDiscount: maximumDiscount ? maximumDiscount.toString() : null,
+        createdBy: session.user.id
       })
       .returning();
     

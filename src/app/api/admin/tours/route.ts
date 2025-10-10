@@ -52,6 +52,8 @@ export async function POST(request: NextRequest) {
       .insert(tours)
       .values({
         ...validatedData,
+        pricePerPerson: validatedData.pricePerPerson.toString(),
+        price: validatedData.price.toString(),
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -71,7 +73,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       );
     }
