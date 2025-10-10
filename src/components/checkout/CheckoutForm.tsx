@@ -76,6 +76,7 @@ export default function CheckoutForm({ user, cartItems, customTourData }: Checko
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState('');
+  const [couponId, setCouponId] = useState<string | null>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [cardDetails, setCardDetails] = useState({
     number: '',
@@ -127,6 +128,7 @@ export default function CheckoutForm({ user, cartItems, customTourData }: Checko
       if (response.ok) {
         setCouponDiscount(data.discount);
         setCouponApplied(couponCode);
+        setCouponId(data.couponId); // Store the coupon ID
         toast.success(`Coupon applied! ${formatINR(data.discount)} discount`);
       } else {
         toast.error(data.error || 'Invalid coupon code');
@@ -142,6 +144,7 @@ export default function CheckoutForm({ user, cartItems, customTourData }: Checko
   const handleRemoveCoupon = () => {
     setCouponDiscount(0);
     setCouponApplied('');
+    setCouponId(null);
     form.setValue('couponCode', '');
     toast.success('Coupon removed');
   };
@@ -202,6 +205,7 @@ export default function CheckoutForm({ user, cartItems, customTourData }: Checko
           },
           specialNotes: formValues.specialNotes,
           couponCode: couponApplied,
+          couponId: couponId, // Pass the coupon ID for usage tracking
           discount: couponDiscount,
           totalAmount: total,
         }),

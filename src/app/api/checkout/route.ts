@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { bookings, tours, customTourRequests } from '../../../lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { bookings, tours, customTourRequests, coupons } from '../../../lib/db/schema';
+import { eq, sql } from 'drizzle-orm';
 import { headers } from 'next/headers';
 
 export async function POST(request: NextRequest) {
@@ -23,7 +23,8 @@ export async function POST(request: NextRequest) {
       paymentMethod,
       cardDetails,
       travelerInfo,
-      totalAmount
+      totalAmount,
+      couponId // Add couponId to track which coupon was used
     } = body;
 
     // Validate that we have either cart items OR custom tour data
@@ -201,6 +202,14 @@ export async function POST(request: NextRequest) {
 
       try {
         const createdBookings = await Promise.all(bookingPromises);
+
+        // If a coupon was used, increment its usage count
+        if (couponId) {
+          await db
+            .update(coupons)
+            .set(sql`usage_count = usage_count + 1`)
+            .where(eq(coupons.id, couponId));
+        }
 
         return NextResponse.json({
           success: true,

@@ -129,23 +129,23 @@ export default async function BookingsPage({
     <div className="space-y-6 animate-in fade-in duration-700">
       {/* Enhanced Page Header with gradient */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-3xl blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-blue-500/5 to-transparent rounded-3xl blur-3xl" />
         <div className="relative space-y-3 pb-4">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
-                  <div className="relative bg-primary/10 p-3 rounded-2xl border border-primary/20">
-                    <CalendarCheck className="h-8 w-8 text-primary" />
+                  <div className="absolute inset-0 bg-indigo-500/20 blur-xl rounded-full" />
+                  <div className="relative bg-gradient-to-br from-indigo-500/10 to-blue-500/10 p-3 rounded-2xl border border-indigo-500/20 backdrop-blur-sm">
+                    <CalendarCheck className="h-8 w-8 text-indigo-600" />
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-br from-indigo-600 to-blue-600 bg-clip-text text-transparent">
                     Bookings Management
                   </h1>
                   <div className="flex items-center gap-2 mt-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
+                    <Sparkles className="h-4 w-4 text-indigo-600" />
                     <p className="text-muted-foreground font-medium">
                       Manage all tour reservations and bookings • {data.stats.pending} awaiting confirmation
                     </p>

@@ -63,23 +63,23 @@ export default async function CouponsPage() {
     <div className="space-y-6 animate-in fade-in duration-700">
       {/* Enhanced Page Header with gradient */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent rounded-3xl blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-rose-500/10 via-orange-500/5 to-transparent rounded-3xl blur-3xl" />
         <div className="relative space-y-3 pb-4">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-amber-500/20 blur-xl rounded-full" />
-                  <div className="relative bg-amber-500/10 p-3 rounded-2xl border border-amber-500/20">
-                    <Tag className="h-8 w-8 text-amber-600" />
+                  <div className="absolute inset-0 bg-rose-500/20 blur-xl rounded-full" />
+                  <div className="relative bg-gradient-to-br from-rose-500/10 to-orange-500/10 p-3 rounded-2xl border border-rose-500/20 backdrop-blur-sm">
+                    <Tag className="h-8 w-8 text-rose-600" />
                   </div>
                 </div>
                 <div>
-                  <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-br from-rose-600 to-orange-600 bg-clip-text text-transparent">
                     Coupon Management
                   </h1>
                   <div className="flex items-center gap-2 mt-2">
-                    <Sparkles className="h-4 w-4 text-amber-600" />
+                    <Sparkles className="h-4 w-4 text-rose-600" />
                     <p className="text-muted-foreground font-medium">
                       Manage discount codes • {data.stats.active} active promotions
                     </p>
@@ -158,26 +158,26 @@ export default async function CouponsPage() {
         </Card>
         
         {/* Average Usage Rate Card */}
-        <Card className="border-border hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <Card className="border-border hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           <CardContent className="p-6 relative">
             <div className="flex items-start justify-between">
               <div className="space-y-2 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Avg. Usage Rate</p>
-                  <TrendingUp className="h-3.5 w-3.5 text-orange-600" />
+                  <TrendingUp className="h-3.5 w-3.5 text-purple-600" />
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-bold bg-gradient-to-br from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                  <p className="text-4xl font-bold bg-gradient-to-br from-purple-600 to-pink-600 bg-clip-text text-transparent">
                     {data.stats.averageUsageRate}%
                   </p>
                 </div>
                 <p className="text-xs text-muted-foreground">Redemption rate</p>
               </div>
               <div className="relative">
-                <div className="absolute inset-0 bg-orange-500/20 blur-lg rounded-full" />
-                <div className="relative bg-orange-500/10 p-3 rounded-xl border border-orange-500/20">
-                  <TrendingUp className="h-7 w-7 text-orange-600" />
+                <div className="absolute inset-0 bg-purple-500/20 blur-lg rounded-full" />
+                <div className="relative bg-purple-500/10 p-3 rounded-xl border border-purple-500/20">
+                  <TrendingUp className="h-7 w-7 text-purple-600" />
                 </div>
               </div>
             </div>

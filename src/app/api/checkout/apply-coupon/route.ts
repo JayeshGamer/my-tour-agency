@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '../../../../lib/auth';
-
-// Mock coupon data - in a real app, this would come from a database
-const COUPONS = {
-  'WELCOME10': { discount: 0.10, type: 'percentage', minAmount: 0 },
-  'SAVE100': { discount: 100, type: 'fixed', minAmount: 500 },
-  'SUMMER20': { discount: 0.20, type: 'percentage', minAmount: 300 },
-  'NEWUSER': { discount: 50, type: 'fixed', minAmount: 200 },
-} as const;
+import { db } from '@/lib/db';
+import { coupons } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,27 +27,78 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const coupon = COUPONS[couponCode.toUpperCase() as keyof typeof COUPONS];
+    // Fetch coupon from database
+    const couponData = await db
+      .select()
+      .from(coupons)
+      .where(eq(coupons.code, couponCode.toUpperCase()))
+      .limit(1);
 
-    if (!coupon) {
+    if (couponData.length === 0) {
       return NextResponse.json(
         { error: 'Invalid coupon code' },
         { status: 400 }
       );
     }
 
-    if (subtotal < coupon.minAmount) {
+    const coupon = couponData[0];
+
+    // Check if coupon is active
+    if (!coupon.isActive) {
       return NextResponse.json(
-        { error: `Minimum order amount of $${coupon.minAmount} required for this coupon` },
+        { error: 'This coupon is no longer active' },
         { status: 400 }
       );
     }
 
+    // Check if coupon has expired
+    const now = new Date();
+    if (coupon.validUntil && coupon.validUntil < now) {
+      return NextResponse.json(
+        { error: 'This coupon has expired' },
+        { status: 400 }
+      );
+    }
+
+    // Check if coupon is valid yet
+    if (coupon.validFrom && coupon.validFrom > now) {
+      return NextResponse.json(
+        { error: 'This coupon is not yet valid' },
+        { status: 400 }
+      );
+    }
+
+    // Check usage limit
+    if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
+      return NextResponse.json(
+        { error: 'This coupon has reached its usage limit' },
+        { status: 400 }
+      );
+    }
+
+    // Check minimum amount
+    const minimumAmount = coupon.minimumAmount ? parseFloat(coupon.minimumAmount.toString()) : 0;
+    if (subtotal < minimumAmount) {
+      return NextResponse.json(
+        { error: `Minimum order amount of ₹${minimumAmount.toLocaleString('en-IN')} required for this coupon` },
+        { status: 400 }
+      );
+    }
+
+    // Calculate discount
     let discount = 0;
-    if (coupon.type === 'percentage') {
-      discount = subtotal * coupon.discount;
+    const discountValue = parseFloat(coupon.discountValue.toString());
+
+    if (coupon.discountType === 'percentage') {
+      discount = subtotal * (discountValue / 100);
     } else {
-      discount = coupon.discount;
+      discount = discountValue;
+    }
+
+    // Apply maximum discount cap if specified
+    if (coupon.maximumDiscount) {
+      const maxDiscount = parseFloat(coupon.maximumDiscount.toString());
+      discount = Math.min(discount, maxDiscount);
     }
 
     // Ensure discount doesn't exceed subtotal
@@ -62,7 +108,8 @@ export async function POST(request: NextRequest) {
       success: true,
       discount: parseFloat(discount.toFixed(2)),
       couponCode: couponCode.toUpperCase(),
-      type: coupon.type,
+      couponId: coupon.id,
+      type: coupon.discountType,
     });
 
   } catch (error) {

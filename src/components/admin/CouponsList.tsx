@@ -66,11 +66,11 @@ const getStatusBadge = (isActive: boolean, validUntil: Date | null | undefined) 
 const getDiscountDisplay = (type: string, value: number) => {
   return type === "percentage" 
     ? `${value}% off`
-    : `$${value} off`;
+    : `₹${value.toLocaleString('en-IN')} off`;
 };
 
-const getUsagePercentage = (used: number, limit: number | null) => {
-  if (!limit) return 0;
+const getUsagePercentage = (used: number | undefined, limit: number | null) => {
+  if (!limit || !used) return 0;
   return Math.min((used / limit) * 100, 100);
 };
 
@@ -129,54 +129,71 @@ export default function CouponsList({ coupons }: CouponsListProps) {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>All Coupons ({coupons.length})</CardTitle>
+    <Card className="overflow-hidden border-border/50 shadow-sm">
+      <CardHeader className="bg-gradient-to-r from-muted/50 to-transparent border-b">
+        <CardTitle className="text-xl font-bold">All Coupons ({coupons.length})</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-6">
         <div className="space-y-4">
           {coupons.length > 0 ? (
             coupons.map((coupon) => (
-              <div key={coupon.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-4">
-                  {/* Coupon Icon */}
-                  <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+              <div key={coupon.id} className="group relative flex items-center justify-between p-5 border rounded-xl hover:shadow-md hover:border-primary/20 transition-all duration-300 bg-gradient-to-r from-muted/20 to-transparent">
+                {/* Hover effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 rounded-xl transition-opacity" />
+
+                <div className="flex items-center gap-4 relative z-10 flex-1">
+                  {/* Coupon Icon with gradient */}
+                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center border border-primary/10 shadow-sm">
                     {coupon.discountType === "percentage" ? (
-                      <Percent className="h-6 w-6 text-primary" />
+                      <Percent className="h-7 w-7 text-primary" />
                     ) : (
-                      <DollarSign className="h-6 w-6 text-primary" />
+                      <DollarSign className="h-7 w-7 text-primary" />
                     )}
                   </div>
 
                   {/* Coupon Details */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-lg font-mono">{coupon.code}</h3>
+                      <h3 className="font-bold text-xl font-mono tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                        {coupon.code}
+                      </h3>
                       {getStatusBadge(coupon.isActive, coupon.validUntil)}
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
+                    {coupon.name && (
+                      <p className="text-sm text-muted-foreground font-medium mb-3">{coupon.name}</p>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                      <div className="flex items-center gap-2 text-foreground">
                         {coupon.discountType === "percentage" ? (
-                          <Percent className="h-3 w-3" />
+                          <div className="p-1.5 rounded-lg bg-blue-500/10">
+                            <Percent className="h-4 w-4 text-blue-600" />
+                          </div>
                         ) : (
-                          <DollarSign className="h-3 w-3" />
+                          <div className="p-1.5 rounded-lg bg-green-500/10">
+                            <DollarSign className="h-4 w-4 text-green-600" />
+                          </div>
                         )}
-                        <span>{getDiscountDisplay(coupon.discountType, Number(coupon.discountValue))}</span>
+                        <span className="font-semibold">{getDiscountDisplay(coupon.discountType, Number(coupon.discountValue))}</span>
                       </div>
                       
-                      <div className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="p-1.5 rounded-lg bg-muted">
+                          <Users className="h-4 w-4" />
+                        </div>
                         <span>
-                          {coupon.usedCount} / {coupon.usageLimit || '∞'} uses
+                          <span className="font-semibold text-foreground">{coupon.usedCount}</span> / {coupon.usageLimit || '∞'} uses
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>
-                          {coupon.validUntil 
-                            ? `Expires ${new Date(coupon.validUntil).toLocaleDateString()}`
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <div className="p-1.5 rounded-lg bg-muted">
+                          <Calendar className="h-4 w-4" />
+                        </div>
+                        <span className="text-xs">
+                          {coupon.validUntil
+                            ? `Expires ${new Date(coupon.validUntil).toLocaleDateString('en-IN')}`
                             : 'No expiry'
                           }
                         </span>
@@ -185,15 +202,15 @@ export default function CouponsList({ coupons }: CouponsListProps) {
 
                     {/* Usage Progress */}
                     {coupon.usageLimit && (
-                      <div className="mt-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-gray-500">Usage</span>
-                          <span className="text-xs text-gray-500">
-                            {Math.round(getUsagePercentage(coupon.usedCount, coupon.usageLimit))}%
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs font-medium text-muted-foreground">Usage Progress</span>
+                          <span className="text-xs font-semibold text-foreground">
+                            {Math.round(getUsagePercentage(coupon.usedCount || 0, coupon.usageLimit))}%
                           </span>
                         </div>
                         <Progress 
-                          value={getUsagePercentage(coupon.usedCount, coupon.usageLimit)}
+                          value={getUsagePercentage(coupon.usedCount || 0, coupon.usageLimit)}
                           className="h-2"
                         />
                       </div>
