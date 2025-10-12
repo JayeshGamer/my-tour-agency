@@ -1,4 +1,5 @@
 import { ComponentPropsWithoutRef } from "react"
+import React from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -39,36 +40,46 @@ export function Marquee({
   pauseOnHover = false,
   children,
   vertical = false,
-  repeat = 4,
+  // duplicate children at least twice to allow the -50% translate technique
+  repeat = 2,
   ...props
 }: MarqueeProps) {
+  const childArray = React.Children.toArray(children)
+
+  // create duplicated array for continuous scroll
+  const duplicated: React.ReactNode[] = []
+  for (let i = 0; i < repeat; i++) {
+    duplicated.push(...childArray)
+  }
+
   return (
     <div
       {...props}
       className={cn(
-        "group flex [gap:var(--gap)] overflow-hidden p-2 [--duration:40s] [--gap:1rem]",
+        /* use the marquee helper so CSS rules apply reliably */
+        "marquee group overflow-hidden p-2 [--duration:40s] [--gap:1rem]",
         {
           "flex-row": !vertical,
           "flex-col": vertical,
+          vertical: vertical,
+          "pause-on-hover": pauseOnHover,
         },
         className
       )}
     >
-      {Array(repeat)
-        .fill(0)
-        .map((_, i) => (
-          <div
-            key={i}
-            className={cn("flex shrink-0 justify-around [gap:var(--gap)]", {
-              "animate-marquee flex-row": !vertical,
-              "animate-marquee-vertical flex-col": vertical,
-              "group-hover:[animation-play-state:paused]": pauseOnHover,
-              "[animation-direction:reverse]": reverse,
-            })}
-          >
-            {children}
-          </div>
+      <div
+        className={cn("marquee-track flex items-center [gap:var(--gap)]", {
+          "flex-row": !vertical,
+          "flex-col": vertical,
+          reverse: reverse,
+          // allow CSS-based pause-on-hover as fallback
+          "pause-on-hover": pauseOnHover,
+        })}
+      >
+        {duplicated.map((child, i) => (
+          <React.Fragment key={i}>{child}</React.Fragment>
         ))}
+      </div>
     </div>
   )
 }

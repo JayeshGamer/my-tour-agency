@@ -53,7 +53,8 @@
       transform: translateX(0);
     }
     to {
-      transform: translateX(calc(-100% - var(--gap)));
+      /* Move by 50% when track contains duplicated content for seamless scrolling */
+      transform: translateX(-50%);
     }
   }
   @keyframes marquee-vertical {
@@ -61,7 +62,7 @@
       transform: translateY(0);
     }
     to {
-      transform: translateY(calc(-100% - var(--gap)));
+      transform: translateY(-50%);
     }
   }
   @keyframes rainbow {
@@ -463,4 +464,71 @@
   .print-friendly {
     @apply bg-white text-black border-gray-800;
   }
+}
+
+/* Marquee helper classes (works with the Marquee component) */
+.marquee {
+  display: flex;
+  overflow: hidden;
+  gap: var(--gap, 1rem);
+  --gap: 1rem;
+  --duration: 40s;
+}
+
+/* Vertical mode on the container */
+.marquee.vertical {
+  flex-direction: column;
+}
+
+/* The animated track that moves — duplicated in the component for continuous scroll */
+.marquee .marquee-track {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--gap);
+  align-items: center;
+  will-change: transform;
+  animation: var(--animate-marquee);
+  /* ensure the track size matches its children (so duplicate technique works) */
+  width: max-content;
+}
+
+/* Vertical variant for the track */
+.marquee.vertical .marquee-track {
+  animation: var(--animate-marquee-vertical);
+  flex-direction: column;
+  height: max-content;
+}
+
+/* Ensure each child inside the track doesn't shrink and keeps its intrinsic size */
+.marquee .marquee-track > * {
+  flex: 0 0 auto;
+}
+
+/* Pause on hover when the container has the pause-on-hover helper */
+.marquee.pause-on-hover:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Support applying pause-on-hover directly to the track (fallback) */
+.marquee .marquee-track.pause-on-hover {
+  /* leaving class so group-hover or JS-based toggles still work */
+}
+
+/* Reverse direction helper */
+.marquee .marquee-track.reverse {
+  animation-direction: reverse;
+}
+
+/* Small helper to ensure proper spacing when the track is used with flex utilities */
+.marquee .marquee-track.justify-around {
+  justify-content: flex-start; /* keep items inline-start so duplication looks continuous */
+}
+
+/* Marquee animation utilities (moved out of @theme inline to satisfy Tailwind constraints) */
+.animate-marquee {
+  /* Uses --animate-marquee variable (eg: marquee var(--duration) infinite linear) */
+  animation: var(--animate-marquee);
+}
+.animate-marquee-vertical {
+  animation: var(--animate-marquee-vertical);
 }
