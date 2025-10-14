@@ -19,7 +19,7 @@ Quick start (development):
    - NEXT_PUBLIC_* variables
    - Any other secret keys required by your environment
 
-[Click here to download the .env file!] (https://drive.google.com/file/d/17EiqugN_7ksodOwKz8pLl93qYnKp4M34/view?usp=sharing)
+Click here to download the .env file (https://drive.google.com/file/d/17EiqugN_7ksodOwKz8pLl93qYnKp4M34/view?usp=sharing)
 
 4. Start the dev server:
 
