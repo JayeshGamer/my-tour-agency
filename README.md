@@ -1,50 +1,66 @@
-# Travel Agency - Tour Booking Platform
+HOW TO RUN this project
 
-A modern tour booking platform built with Next.js, featuring user authentication, tour browsing, and a complete checkout system.
+This repository is a Next.js 15 project (React 19). Follow these steps to run it locally after cloning from GitHub.
 
-## ⚠️ Payment System Notice
+Prerequisites (Windows):
+- Node.js 20+ (install from https://nodejs.org)
+- Git (to clone the repo)
+- A PostgreSQL-compatible database if you plan to run database scripts (optional for static dev run)
+- Optional: pnpm/npm/yarn — this repo uses npm scripts in package.json
 
-**This application includes a Stripe checkout system that operates in TEST MODE ONLY. No real payments are processed.** 
+Quick start (development):
+1. Open a terminal (cmd.exe) in the project root (where package.json is).
+2. Install dependencies:
 
-🎯 **Current Status**: All database and TypeScript errors have been resolved. The Stripe integration is properly implemented and ready for testing with valid Stripe test API keys.
+   npm install
 
-See [PAYMENT_DISCLAIMER.md](./PAYMENT_DISCLAIMER.md) for complete details about the payment system implementation.
+3. Add the .env.local file at the project root if you need environment variables. Example keys used by the app (check README or code for exact names):
+   - DATABASE_URL
+   - NEXT_PUBLIC_* variables
+   - Any other secret keys required by your environment
 
----
+[Click here to download the .env file!] (https://drive.google.com/file/d/17EiqugN_7ksodOwKz8pLl93qYnKp4M34/view?usp=sharing)
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+4. Start the dev server:
 
-## Getting Started
+   npm run dev
 
-First, run the development server:
+This runs Next.js in development mode (the project uses --turbopack in the scripts). Open http://localhost:3000 in your browser.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Build and production:
+1. Build the app:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+   npm run build
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. Start the production server:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   npm start
 
-## Learn More
+Other useful npm scripts (from package.json):
+- npm run lint          — run ESLint
+- npm run seed:admin    — run TypeScript script to seed admin user (uses tsx)
+- npm run setup:auth    — run script to set up auth tables
+- npm run db:seed       — run DB seed script (lib/db/seed.ts)
+- npm run db:migrate    — run migrations (tsx scripts/run-migration.ts)
+- npm run test:e2e      — run Playwright end-to-end tests (requires Playwright install)
 
-To learn more about Next.js, take a look at the following resources:
+If you run DB scripts, ensure your DATABASE_URL is set and the database is reachable.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Notes and troubleshooting:
+- The codebase targets TypeScript; if your editor shows type errors, ensure you installed the project's types and restarted the TypeScript server.
+- If you see Next.js or package mismatch errors, check node/npm versions and re-run npm install.
+- For Playwright tests, first run:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   npm run playwright:install
 
-## Deploy on Vercel
+- For any seeds/migrations, read the project's scripts in the `scripts/` folder to see what they expect.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Re-running the unused-components check (provided helper):
+- There is a small helper script at `scripts/find-unused-components.js` that produces `COMPONENTS_UNUSED_REPORT.json`.
+- Run it with:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   node scripts/find-unused-components.js
+
+This uses a simple heuristic (searching for import strings) and is a starting point for cleanup — always manually verify before deleting code.
+
+That's it — 
