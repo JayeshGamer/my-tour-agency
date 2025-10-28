@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react"
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isBefore, startOfDay } from "date-fns"
+import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isBefore, startOfDay, parseISO } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { Button } from "./button"
@@ -15,6 +15,7 @@ interface DateInputProps {
   className?: string
   disabled?: boolean
   minDate?: Date
+  availableDates?: string[] // Array of ISO date strings for available tour dates
 }
 
 export function DateInput({
@@ -23,7 +24,8 @@ export function DateInput({
   placeholder = "Select a date",
   className,
   disabled = false,
-  minDate = new Date() // Default to today
+  minDate = new Date(), // Default to today
+  availableDates = [] // Optional: specific available dates
 }: DateInputProps) {
   const [open, setOpen] = React.useState(false)
   const [currentMonth, setCurrentMonth] = React.useState(date || new Date())
@@ -35,6 +37,28 @@ export function DateInput({
   // Calculate empty cells for the start of the month
   const startDayOfWeek = monthStart.getDay()
   const emptyCells = Array(startDayOfWeek).fill(null)
+
+  // Convert available dates to Date objects
+  const availableDateObjects = React.useMemo(() => {
+    const today = startOfDay(new Date())
+    return availableDates
+      .map(dateStr => startOfDay(parseISO(dateStr)))
+      .filter(date => !isBefore(date, today))
+      .sort((a, b) => a.getTime() - b.getTime())
+  }, [availableDates])
+
+  // Check if a date is in the available dates list
+  const isDateAvailable = React.useCallback((checkDate: Date) => {
+    if (availableDateObjects.length === 0) {
+      // If no specific dates provided, allow any future date
+      return true
+    }
+
+    // Check if date matches any available date
+    return availableDateObjects.some(availableDate =>
+      isSameDay(checkDate, availableDate)
+    )
+  }, [availableDateObjects])
 
   const handlePreviousMonth = () => {
     setCurrentMonth(subMonths(currentMonth, 1))
@@ -54,6 +78,11 @@ export function DateInput({
       return // Don't allow selection
     }
 
+    // Check if date is available (if availableDates is provided)
+    if (!isDateAvailable(selectedDate)) {
+      return // Don't allow selection of unavailable dates
+    }
+
     onDateChange?.(selectedDate)
     setOpen(false)
   }
@@ -64,7 +93,12 @@ export function DateInput({
     const checkDateStart = startOfDay(checkDate)
 
     // A date is disabled if it's before today OR before the specified minDate
-    return isBefore(checkDateStart, today) || isBefore(checkDateStart, minDateStart)
+    const isPastDate = isBefore(checkDateStart, today) || isBefore(checkDateStart, minDateStart)
+
+    // Also disable if not in available dates (when availableDates is provided)
+    const isNotAvailable = !isDateAvailable(checkDate)
+
+    return isPastDate || isNotAvailable
   }
 
   const isDateSelected = (checkDate: Date) => {
@@ -138,6 +172,7 @@ export function DateInput({
               const disabled = isDateDisabled(day)
               const selected = isDateSelected(day)
               const today = isToday(day)
+              const available = isDateAvailable(day) && !isBefore(startOfDay(day), startOfDay(new Date()))
 
               return (
                 <button
@@ -151,6 +186,7 @@ export function DateInput({
                     disabled && "text-muted-foreground opacity-30 cursor-not-allowed hover:bg-transparent",
                     selected && "bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-semibold shadow-lg",
                     !selected && today && "border-2 border-purple-500 font-semibold text-purple-600",
+                    !selected && !today && available && availableDateObjects.length > 0 && "border border-green-500 text-green-700 font-medium bg-green-50",
                     !selected && !today && !disabled && "hover:bg-purple-50 dark:hover:bg-purple-950/20"
                   )}
                 >
@@ -176,6 +212,31 @@ export function DateInput({
               Today
             </Button>
           </div>
+
+          {/* Show available dates info if provided */}
+          {availableDateObjects.length > 0 && (
+            <div className="pt-2 border-t">
+              <p className="text-xs font-medium text-gray-700 mb-2">
+                Available Tour Dates:
+              </p>
+              <div className="max-h-32 overflow-y-auto space-y-1">
+                {availableDateObjects.slice(0, 5).map((availableDate, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleDateSelect(availableDate)}
+                    className="text-xs text-left w-full px-2 py-1 rounded hover:bg-green-50 border border-green-200 text-green-700 transition-colors"
+                  >
+                    {format(availableDate, "PPP")}
+                  </button>
+                ))}
+                {availableDateObjects.length > 5 && (
+                  <p className="text-xs text-gray-500 px-2">
+                    +{availableDateObjects.length - 5} more dates available
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </PopoverContent>
     </Popover>

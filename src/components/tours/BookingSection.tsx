@@ -7,12 +7,10 @@ import { Calendar, Users, Plus, Minus, ShoppingCart, CreditCard, Info } from 'lu
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { DateDisplay } from '@/components/ui/DateDisplay';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DateInput } from '@/components/ui/date-input';
 import { formatCurrency } from '@/lib/currency';
 
 interface Tour {
@@ -216,7 +214,7 @@ export default function BookingSection({ tour, noCard = false }: BookingSectionP
           <Calendar className="w-4 h-4" />
           Select Tour Date
         </Label>
-        <DatePicker
+        <DateInput
           date={selectedDate}
           onDateChange={setSelectedDate}
           availableDates={availableDates}
