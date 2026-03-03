@@ -63,4 +63,33 @@ Re-running the unused-components check (provided helper):
 
 This uses a simple heuristic (searching for import strings) and is a starting point for cleanup — always manually verify before deleting code.
 
-That's it — 
+---
+
+## Vercel Deployment
+
+The application is fully compatible with Vercel, the official host for Next.js apps. Follow these steps to deploy:
+
+1. Install the Vercel CLI and log in:
+   ```bash
+   npm i -g vercel
+   vercel login
+   ```
+2. From the project root run `vercel` and follow the prompts to link or create a project.
+3. Ensure the following environment variables are configured in the Vercel dashboard (under **Settings > Environment Variables**):
+   - `DATABASE_URL`
+   - `NEXTAUTH_URL` (your site's URL)
+   - `NEXTAUTH_SECRET`
+   - any additional keys used by the app (e.g. third‑party APIs).
+
+The repo includes a `vercel.json` which specifies the `@vercel/next` build and placeholders for your env vars. You can customize rewrites or headers there if needed.
+
+You can also deploy from GitHub by connecting the repository in the Vercel dashboard; builds will run automatically on pushes to `master`.
+
+Local preview of production build:
+```bash
+npm run build
+npm start
+```
+
+On Vercel the `build` command is invoked automatically (`npm run build` uses `next build --turbopack`).
+

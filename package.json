@@ -7,6 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
+    "deploy": "vercel --prod --yes",
     "seed:admin": "tsx scripts/seed-admin.ts",
     "setup:auth": "tsx scripts/setup-auth-tables.ts",
     "db:seed": "tsx lib/db/seed.ts",

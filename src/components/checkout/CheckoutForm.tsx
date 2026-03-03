@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import BookingSummary from './BookingSummary';
+import BookingSummary from './BookingSummary.tsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

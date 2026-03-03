@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
         if (couponId) {
           await db
             .update(coupons)
-            .set(sql`usage_count = usage_count + 1`)
+            .set({ usedCount: sql`${coupons.usedCount} + 1` })
             .where(eq(coupons.id, couponId));
         }
 

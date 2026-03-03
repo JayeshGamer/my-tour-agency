@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
-import { Calendar } from "@/components/ui/calendar";
+import { DateInput } from "@/components/ui/date-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -748,40 +748,28 @@ export default function CustomTourRequestForm() {
 
           {/* Date Picker */}
           <div className="bg-gray-50 rounded-xl p-6 space-y-4">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full h-14 justify-start text-left font-normal bg-white border-gray-200 hover:bg-gray-50"
-                >
-                  <CalendarIcon className="mr-3 h-5 w-5 text-gray-500" />
-                  <span className="text-base">
-                    {selectedDateRange.from ? (
-                      selectedDateRange.to ? (
-                        <>
-                          {format(selectedDateRange.from, "MMM dd")} - {format(selectedDateRange.to, "MMM dd, yyyy")}
-                        </>
-                      ) : (
-                        format(selectedDateRange.from, "MMM dd, yyyy")
-                      )
-                    ) : (
-                      <span className="text-gray-500">Select your travel dates</span>
-                    )}
-                  </span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="center">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={selectedDateRange.from}
-                  selected={{ from: selectedDateRange.from, to: selectedDateRange.to }}
-                  onSelect={(range) => setSelectedDateRange({ from: range?.from, to: range?.to })}
-                  numberOfMonths={2}
-                  disabled={(date) => date < new Date()}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-gray-700">Start Date</Label>
+                <DateInput
+                  date={selectedDateRange.from}
+                  onDateChange={(date) => setSelectedDateRange(prev => ({ ...prev, from: date }))}
+                  placeholder="Select start date"
+                  minDate={new Date()}
                 />
-              </PopoverContent>
-            </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-gray-700">End Date</Label>
+                <DateInput
+                  date={selectedDateRange.to}
+                  onDateChange={(date) => setSelectedDateRange(prev => ({ ...prev, to: date }))}
+                  placeholder="Select end date"
+                  minDate={selectedDateRange.from || new Date()}
+                  disabled={!selectedDateRange.from}
+                />
+              </div>
+            </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">

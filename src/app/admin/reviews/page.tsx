@@ -122,7 +122,7 @@ export default async function ReviewsPage() {
 
             {/* Quick Actions */}
             <div className="flex items-center gap-3">
-              <RainbowButton variant="purple" className="gap-2">
+              <RainbowButton className="gap-2">
                 <Filter className="h-4 w-4" />
                 Filter
               </RainbowButton>

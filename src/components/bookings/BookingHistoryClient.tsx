@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { CalendarDays, MapPin, Users, CreditCard, Eye, X, Clock, CheckCircle2, X
 import Link from "next/link";
 import { formatCurrency } from "@/lib/currency";
 import { formatDate } from "@/lib/utils";
-import { CancelBookingDialog } from "./CancelBookingDialog";
+import { CancelBookingDialog } from "./CancelBookingDialog.tsx";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 
@@ -66,7 +66,7 @@ export default function BookingHistoryClient() {
     }
   };
 
-  const handleCancelBooking = async (bookingId: string) => {
+  const handleCancelBooking = useCallback(async (bookingId: string) => {
     try {
       const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
         method: 'PATCH',
@@ -94,19 +94,19 @@ export default function BookingHistoryClient() {
       toast.error(error instanceof Error ? error.message : "Failed to cancel booking");
       throw error;
     }
-  };
+  }, []);
 
-  const openCancelDialog = (booking: Booking) => {
+  const openCancelDialog = useCallback((booking: Booking) => {
     setSelectedBooking(booking);
     setCancelDialogOpen(true);
-  };
+  }, []);
 
-  const closeCancelDialog = () => {
+  const closeCancelDialog = useCallback(() => {
     setCancelDialogOpen(false);
     setSelectedBooking(null);
-  };
+  }, []);
 
-  const canCancelBooking = (booking: Booking) => {
+  const canCancelBooking = useCallback((booking: Booking) => {
     if (booking.status === 'cancelled') {
       return false;
     }
@@ -125,9 +125,9 @@ export default function BookingHistoryClient() {
       console.error("Error calculating cancellation eligibility for booking:", booking.id, error);
       return false;
     }
-  };
+  }, []);
 
-  const getStatusConfig = (status: string) => {
+  const getStatusConfig = useCallback((status: string) => {
     switch (status) {
       case "confirmed":
         return {
@@ -154,19 +154,23 @@ export default function BookingHistoryClient() {
           label: status
         };
     }
-  };
+  }, []);
 
-  const filteredBookings = bookings.filter(booking => {
-    if (activeTab === "all") return true;
-    return booking.status === activeTab;
-  });
+  // Memoize filtered bookings
+  const filteredBookings = useMemo(() => {
+    return bookings.filter(booking => {
+      if (activeTab === "all") return true;
+      return booking.status === activeTab;
+    });
+  }, [bookings, activeTab]);
 
-  const stats = {
+  // Memoize stats
+  const stats = useMemo(() => ({
     total: bookings.length,
     confirmed: bookings.filter(b => b.status === "confirmed").length,
     pending: bookings.filter(b => b.status === "pending").length,
     cancelled: bookings.filter(b => b.status === "cancelled").length,
-  };
+  }), [bookings]);
 
   if (loading) {
     return (
