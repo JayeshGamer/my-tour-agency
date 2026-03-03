@@ -45,3 +45,4 @@ tests/storageState.json
 tests/e2e-report.txt
 
 .vercel
+.env*.local
