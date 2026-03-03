@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from '../../lib/auth-client';
 import CheckoutForm from '../../components/checkout/CheckoutForm';
@@ -34,6 +34,21 @@ interface CustomTourData {
 }
 
 export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-[#030712]">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-gray-900 dark:text-white" />
+          <p className="text-gray-600 dark:text-gray-400">Loading checkout...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
+  );
+}
+
+function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, isPending } = useSession();
