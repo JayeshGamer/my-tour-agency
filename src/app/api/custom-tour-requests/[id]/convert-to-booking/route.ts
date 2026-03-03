@@ -87,18 +87,21 @@ export async function POST(request: NextRequest, context: any) {
 
     // Create new tour if requested
     if (validatedData.createNewTour && validatedData.tourDetails) {
-      const [newTour] = await db
+      const perPerson = existingRequest.quoteDetails.totalAmount / existingRequest.groupSize;
+      const tourInsertData: any = {
+        ...validatedData.tourDetails,
+        pricePerPerson: perPerson,
+        price: perPerson, // Keep compatibility
+        tourType: 'custom_created',
+        sourceRequestId: requestId,
+        createdBy: null, // Admin-created
+        status: 'Active'
+      };
+
+      const [newTour] = (await db
         .insert(tours)
-        .values({
-          ...validatedData.tourDetails,
-          pricePerPerson: existingRequest.quoteDetails.totalAmount / existingRequest.groupSize,
-          price: existingRequest.quoteDetails.totalAmount / existingRequest.groupSize, // Keep compatibility
-          tourType: 'custom_created',
-          sourceRequestId: requestId,
-          createdBy: null, // Admin-created
-          status: 'Active'
-        })
-        .returning();
+        .values(tourInsertData)
+        .returning()) as any;
 
       tourId = newTour.id;
     }
