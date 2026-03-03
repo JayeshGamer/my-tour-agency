@@ -24,10 +24,7 @@ export function RadialChart({ data, className }: RadialChartProps) {
       >
         <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
         <RadialBar
-          minAngle={15}
-          background
-          clockWise
-          dataKey="value"
+          {...({ minAngle: 15, background: true, clockWise: true, dataKey: 'value' } as any)}
         />
         <Legend
           iconSize={10}

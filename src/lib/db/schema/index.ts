@@ -467,10 +467,7 @@ export const customTourRequestsRelations = relations(customTourRequests, ({ one,
     fields: [customTourRequests.userId],
     references: [users.id],
   }),
-  tours: many(tours, {
-    fields: [customTourRequests.id],
-    references: [tours.sourceRequestId],
-  }),
+  tours: many(tours),
   communications: many(tourRequestCommunications),
 }));
 

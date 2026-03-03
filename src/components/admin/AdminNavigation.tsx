@@ -30,7 +30,7 @@ import { signOut } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, type Variants } from "framer-motion";
 
 interface AdminNavigationProps {
   user: {
@@ -184,7 +184,7 @@ export default function AdminNavigation({ user }: AdminNavigationProps) {
     collapsed: { x: -288 }
   };
 
-  const sectionVariants = {
+  const sectionVariants: Variants = {
     hidden: {
       opacity: 0,
       height: 0,
@@ -204,7 +204,7 @@ export default function AdminNavigation({ user }: AdminNavigationProps) {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: {
       opacity: 0,
       x: -20,

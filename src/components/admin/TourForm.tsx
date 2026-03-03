@@ -40,7 +40,8 @@ export default function TourForm({ initialData }: { initialData?: any }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof TourSchema>>({
-    resolver: zodResolver(TourSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(TourSchema) as any,
     defaultValues: initialData || {
       name: "",
       title: "",

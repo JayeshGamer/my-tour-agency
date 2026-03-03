@@ -172,7 +172,7 @@ export default function Header() {
                           </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-800" />
-                        {session.user.role === 'Admin' && (
+                        {(session.user as any).role === 'Admin' && (
                           <>
                             <DropdownMenuItem className="text-[color:var(--primary)] focus:bg-gray-100 dark:focus:bg-gray-800 focus:text-[color:var(--primary)] dark:focus:text-[color:var(--primary)]">
                               <Link href="/admin" className="flex items-center w-full">
@@ -267,7 +267,7 @@ export default function Header() {
                             <p className="text-xs text-gray-600 dark:text-gray-400">{session.user.email}</p>
                           </div>
                         </div>
-                        {session.user.role === 'Admin' && (
+                        {(session.user as any).role === 'Admin' && (
                           <Link href="/admin" className="block text-sm text-[color:var(--primary)] hover:text-gray-700 dark:hover:text-gray-300">
                             <Settings className="inline mr-2 h-4 w-4" />
                             Dashboard

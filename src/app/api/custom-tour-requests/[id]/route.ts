@@ -75,7 +75,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       : baseSelect;
 
     // Build the query and apply leftJoin only when needed.
-    let query = db.select(selectFields).from(customTourRequests);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = db.select(selectFields).from(customTourRequests);
     if (isAdmin) {
       query = query.leftJoin(users, eq(customTourRequests.userId, users.id));
     }

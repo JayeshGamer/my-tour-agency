@@ -85,7 +85,8 @@ export async function GET(request: NextRequest) {
         }
       : baseSelect;
 
-    let query = db.select(selectFields).from(customTourRequests);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = db.select(selectFields).from(customTourRequests);
 
     if (isAdmin) {
       query = query.leftJoin(users, eq(customTourRequests.userId, users.id));
@@ -114,8 +115,8 @@ export async function GET(request: NextRequest) {
     }
     
     // Sanitize the response data to prevent null/undefined issues with Object.entries
-    const sanitizedRequests = requests.map((request) => {
-      const safeRequest = {
+    const sanitizedRequests = requests.map((request: any) => {
+      const safeRequest: any = {
         ...request,
         quoteDetails: null // Start with null
       };
@@ -226,7 +227,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid data', details: error.errors },
+        { error: 'Invalid data', details: error.issues },
         { status: 400 }
       );
     }

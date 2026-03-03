@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import BookingSummary from './BookingSummary.tsx';
+import BookingSummary from './BookingSummary';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -426,7 +426,7 @@ export default function CheckoutForm({ user, cartItems, customTourData }: Checko
         <div className="space-y-6">
           <BookingSummary
             cartItems={cartItems}
-            customTourData={customTourData}
+            customTourData={customTourData ?? undefined}
             subtotal={subtotal}
             discount={couponDiscount}
             couponCode={couponApplied}

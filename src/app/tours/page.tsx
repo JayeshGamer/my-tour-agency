@@ -406,7 +406,7 @@ export default function ToursPage() {
   const activeFiltersCount = Object.values(filters).flat().length;
   const activeQuickFilters = [
     ...Object.entries(filters).flatMap(([category, values]) =>
-      values.map(value => ({ category, value }))
+      values.map((value: string) => ({ category, value }))
     ),
     ...(sortBy !== "featured" ? [{ category: "sort", value: sortBy }] : []),
   ];
@@ -645,7 +645,7 @@ export default function ToursPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: index * 0.05 }}
                           >
-                            <TourCard tour={tour} />
+                            <TourCard tour={tour as any} />
                           </motion.div>
                         ))}
                       </motion.div>

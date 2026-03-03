@@ -6,7 +6,8 @@ import { format, isBefore, startOfDay, parseISO } from "date-fns"
 
 import { cn } from "@/lib/utils"
 import { Button } from "./button"
-import { Calendar } from "./calendar"
+import { DayPicker } from "react-day-picker"
+import "react-day-picker/style.css"
 import {
   Popover,
   PopoverContent,
@@ -85,12 +86,11 @@ export function DatePicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
+        <DayPicker
           mode="single"
           selected={date}
           onSelect={handleDateSelect}
           disabled={disabledDates}
-          initialFocus
           numberOfMonths={1}
         />
         

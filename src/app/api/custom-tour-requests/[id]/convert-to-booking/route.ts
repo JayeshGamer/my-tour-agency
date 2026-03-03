@@ -120,7 +120,7 @@ export async function POST(request: NextRequest, context: any) {
         tourId: tourId,
         userId: existingRequest.userId,
         numberOfPeople: existingRequest.groupSize,
-        totalPrice: existingRequest.quoteDetails.totalAmount,
+        totalPrice: String(existingRequest.quoteDetails.totalAmount),
         startDate: new Date(validatedData.startDate),
         status: 'Confirmed',
         paymentStatus: 'Pending',
@@ -172,7 +172,7 @@ export async function POST(request: NextRequest, context: any) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid conversion data', details: error.errors },
+        { error: 'Invalid conversion data', details: error.issues },
         { status: 400 }
       );
     }

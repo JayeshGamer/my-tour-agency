@@ -9,7 +9,7 @@ import { CalendarDays, MapPin, Users, CreditCard, Eye, X, Clock, CheckCircle2, X
 import Link from "next/link";
 import { formatCurrency } from "@/lib/currency";
 import { formatDate } from "@/lib/utils";
-import { CancelBookingDialog } from "./CancelBookingDialog.tsx";
+import { CancelBookingDialog } from "./CancelBookingDialog";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 

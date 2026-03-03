@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 const quoteSchema = z.object({
   totalAmount: z.number().min(0, 'Total amount must be positive'),
-  breakdown: z.record(z.number()),
+  breakdown: z.record(z.string(), z.number()),
   validity: z.string().min(1, 'Validity date is required'),
   currency: z.string().default('INR'),
   terms: z.string().optional(),
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest, context: any) {
 
     // Create notification for the user
     await db.insert(notifications).values({
-      userId: existingRequest.userId,
+      adminId: existingRequest.userId,
       title: 'Quote Ready for Your Custom Tour',
       message: `Your custom tour quote for ${existingRequest.destination} is ready! Total amount: ${body.currency || 'INR'} ${body.totalAmount.toLocaleString()}`,
       type: 'quote_ready',
@@ -177,7 +177,7 @@ export async function PATCH(request: NextRequest, context: any) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid quote data', details: error.errors },
+        { error: 'Invalid quote data', details: error.issues },
         { status: 400 }
       );
     }
